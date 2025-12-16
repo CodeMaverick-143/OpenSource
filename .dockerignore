@@ -1,0 +1,40 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Virtual environments
+venv/
+env/
+.venv/
+
+# Git
+.git/
+.gitignore
+
+# IDE
+.vscode/
+.idea/
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Environment
+.env
+.env.*
+
+# Documentation
+*.md
+!README.md
+
+# CI/CD
+.github/
+
+# Pre-commit
+.pre-commit-config.yaml
+
+# Development
+requirements-dev.txt

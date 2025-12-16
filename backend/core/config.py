@@ -1,0 +1,127 @@
+"""
+Configuration management using Pydantic Settings.
+Supports environment-specific configs (development, testing, production).
+"""
+
+from functools import lru_cache
+from typing import Any, Literal
+
+from pydantic import PostgresDsn, RedisDsn, field_validator
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+class Settings(BaseSettings):
+    """Base settings class with common configuration."""
+
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        case_sensitive=False,
+        extra="ignore",
+    )
+
+    # Environment
+    ENVIRONMENT: Literal["development", "testing", "production"] = "development"
+
+    # Application
+    APP_NAME: str = "ContriVerse"
+    APP_VERSION: str = "0.1.0"
+    DEBUG: bool = False
+    SECRET_KEY: str
+
+    # API
+    API_V1_PREFIX: str = "/api/v1"
+    BACKEND_CORS_ORIGINS: list[str] = ["http://localhost:3000"]
+
+    # Database
+    DATABASE_URL: PostgresDsn
+    DB_ECHO: bool = False
+    DB_POOL_SIZE: int = 5
+    DB_MAX_OVERFLOW: int = 10
+
+    # Redis
+    REDIS_URL: RedisDsn
+
+    # Celery
+    CELERY_BROKER_URL: str
+    CELERY_RESULT_BACKEND: str
+
+    # Logging
+    LOG_LEVEL: str = "INFO"
+    LOG_FORMAT: Literal["json", "console"] = "json"
+
+    # GitHub OAuth
+    GITHUB_CLIENT_ID: str = ""
+    GITHUB_CLIENT_SECRET: str = ""
+    GITHUB_REDIRECT_URI: str = ""
+
+    # Security
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
+    REFRESH_TOKEN_EXPIRE_DAYS: int = 7
+
+    @field_validator("SECRET_KEY")
+    @classmethod
+    def validate_secret_key(cls, v: str) -> str:
+        """Ensure SECRET_KEY is set and not a placeholder."""
+        if not v or v == "your-secret-key-here-change-in-production":
+            raise ValueError(
+                "SECRET_KEY must be set to a secure value. "
+                "Generate one with: openssl rand -hex 32"
+            )
+        return v
+
+    @field_validator("BACKEND_CORS_ORIGINS", mode="before")
+    @classmethod
+    def parse_cors_origins(cls, v: Any) -> list[str]:
+        """Parse CORS origins from string or list."""
+        if isinstance(v, str):
+            return [origin.strip() for origin in v.split(",")]
+        return v
+
+
+class DevelopmentSettings(Settings):
+    """Development environment settings."""
+
+    DEBUG: bool = True
+    DB_ECHO: bool = True
+    LOG_FORMAT: Literal["json", "console"] = "console"
+
+
+class TestingSettings(Settings):
+    """Testing environment settings."""
+
+    DEBUG: bool = True
+    DB_ECHO: bool = False
+    LOG_FORMAT: Literal["json", "console"] = "console"
+
+
+class ProductionSettings(Settings):
+    """Production environment settings."""
+
+    DEBUG: bool = False
+    DB_ECHO: bool = False
+    LOG_FORMAT: Literal["json", "console"] = "json"
+
+
+@lru_cache
+def get_settings() -> Settings:
+    """
+    Get settings instance based on ENVIRONMENT variable.
+    Cached to avoid re-reading environment variables.
+    """
+    import os
+
+    environment = os.getenv("ENVIRONMENT", "development").lower()
+
+    settings_map = {
+        "development": DevelopmentSettings,
+        "testing": TestingSettings,
+        "production": ProductionSettings,
+    }
+
+    settings_class = settings_map.get(environment, DevelopmentSettings)
+    return settings_class()
+
+
+# Global settings instance
+settings = get_settings()
