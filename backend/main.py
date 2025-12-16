@@ -54,6 +54,8 @@ app.include_router(api_router, prefix=settings.API_V1_PREFIX)
 @app.on_event("startup")
 async def startup_event() -> None:
     """Application startup event."""
+    from backend.db.prisma_client import initialize_prisma
+
     logger.info(
         "application_startup",
         app_name=settings.APP_NAME,
@@ -61,11 +63,19 @@ async def startup_event() -> None:
         environment=settings.ENVIRONMENT,
     )
 
+    # Initialize Prisma client
+    await initialize_prisma()
+
 
 @app.on_event("shutdown")
 async def shutdown_event() -> None:
     """Application shutdown event."""
+    from backend.db.prisma_client import disconnect_prisma
+
     logger.info("application_shutdown")
+
+    # Disconnect Prisma client
+    await disconnect_prisma()
 
 
 @app.get("/", tags=["root"])

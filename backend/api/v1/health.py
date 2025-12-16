@@ -3,12 +3,9 @@ Health check endpoints for monitoring application status.
 """
 
 import structlog
-from fastapi import APIRouter, Depends, status
-from sqlalchemy import text
-from sqlalchemy.ext.asyncio import AsyncSession
+from fastapi import APIRouter, status
 
 from backend.core.config import settings
-from backend.db.session import get_db
 
 router = APIRouter(tags=["health"])
 logger = structlog.get_logger(__name__)
@@ -26,12 +23,18 @@ async def health_check() -> dict:
 
 
 @router.get("/health/db", status_code=status.HTTP_200_OK)
-async def database_health_check(db: AsyncSession = Depends(get_db)) -> dict:
+async def database_health_check() -> dict:
     """Check database connectivity."""
     try:
-        result = await db.execute(text("SELECT 1"))
-        result.scalar()
-        return {"status": "healthy", "database": "connected"}
+        from backend.db.prisma_client import health_check
+
+        is_healthy = await health_check()
+
+        if is_healthy:
+            return {"status": "healthy", "database": "connected"}
+        else:
+            return {"status": "unhealthy", "database": "disconnected"}
+
     except Exception as e:
         logger.error("database_health_check_failed", error=str(e))
         return {"status": "unhealthy", "database": "disconnected", "error": str(e)}

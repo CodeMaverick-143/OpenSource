@@ -6,7 +6,7 @@ Supports environment-specific configs (development, testing, production).
 from functools import lru_cache
 from typing import Any, Literal
 
-from pydantic import PostgresDsn, RedisDsn, field_validator
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -33,14 +33,26 @@ class Settings(BaseSettings):
     API_V1_PREFIX: str = "/api/v1"
     BACKEND_CORS_ORIGINS: list[str] = ["http://localhost:3000"]
 
-    # Database
-    DATABASE_URL: PostgresDsn
-    DB_ECHO: bool = False
-    DB_POOL_SIZE: int = 5
-    DB_MAX_OVERFLOW: int = 10
+    # Database - NeonDB with Prisma
+    DATABASE_URL: str  # Pooled connection for application
+    DIRECT_DATABASE_URL: str  # Direct connection for migrations
+
+    @field_validator("DATABASE_URL", "DIRECT_DATABASE_URL")
+    @classmethod
+    def validate_database_urls(cls, v: str, info) -> str:
+        """Ensure database URLs are set and use PostgreSQL."""
+        if not v:
+            field_name = info.field_name
+            raise ValueError(
+                f"{field_name} must be set. "
+                "See docs/NEONDB_SETUP.md for setup instructions."
+            )
+        if not v.startswith("postgresql://"):
+            raise ValueError(f"{info.field_name} must be a PostgreSQL connection string")
+        return v
 
     # Redis
-    REDIS_URL: RedisDsn
+    REDIS_URL: str
 
     # Celery
     CELERY_BROKER_URL: str

@@ -1,0 +1,287 @@
+// Prisma schema for ContriVerse
+// Database: NeonDB (serverless PostgreSQL)
+
+generator client {
+    provider             = "prisma-client-py"
+    interface            = "asyncio"
+    recursive_type_depth = 5
+}
+
+datasource db {
+    provider  = "postgresql"
+    url       = env("DATABASE_URL")
+    directUrl = env("DIRECT_DATABASE_URL")
+    // Connection URLs are now passed via PrismaClient constructor or environment variables
+    // DATABASE_URL and DIRECT_DATABASE_URL will be used automatically
+}
+
+// ============================================================================
+// USER & AUTHENTICATION
+// ============================================================================
+
+model User {
+    id             String  @id @default(uuid())
+    githubId       BigInt  @unique @map("github_id")
+    githubUsername String  @map("github_username") @db.VarChar(255)
+    avatarUrl      String? @map("avatar_url") @db.VarChar(512)
+    profileUrl     String? @map("profile_url") @db.VarChar(512)
+    email          String? @db.VarChar(255)
+
+    // Account state
+    isBanned  Boolean @default(false) @map("is_banned")
+    isDeleted Boolean @default(false) @map("is_deleted")
+
+    // Activity tracking
+    lastLoginAt DateTime? @map("last_login_at")
+
+    // Contribution metrics
+    totalPoints Int  @default(0) @map("total_points")
+    rank        Int?
+
+    // Timestamps
+    createdAt DateTime @default(now()) @map("created_at")
+    updatedAt DateTime @updatedAt @map("updated_at")
+
+    // Relations
+    refreshTokens      RefreshToken[]
+    projectMaintainers ProjectMaintainer[]
+    pullRequests       PullRequest[]
+    prReviews          PRReview[]
+    pointTransactions  PointTransaction[]
+    userBadges         UserBadge[]
+    auditLogs          AuditLog[]
+
+    @@index([githubId])
+    @@index([githubUsername])
+    @@map("users")
+}
+
+model RefreshToken {
+    id        String   @id @default(uuid())
+    token     String   @unique @db.VarChar(512)
+    userId    String   @map("user_id")
+    expiresAt DateTime @map("expires_at")
+    createdAt DateTime @default(now()) @map("created_at")
+
+    // Relations
+    user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+    @@index([userId])
+    @@index([token])
+    @@map("refresh_tokens")
+}
+
+// ============================================================================
+// PROJECTS & REPOSITORIES
+// ============================================================================
+
+model Project {
+    id          String   @id @default(uuid())
+    name        String   @db.VarChar(255)
+    description String?  @db.Text
+    tags        String[] // Array of tags (frontend, backend, ML, etc.)
+    difficulty  String   @db.VarChar(50) // beginner, intermediate, advanced
+    rules       Json? // Contribution rules as JSON
+    isActive    Boolean  @default(true) @map("is_active")
+
+    // Timestamps
+    createdAt DateTime @default(now()) @map("created_at")
+    updatedAt DateTime @updatedAt @map("updated_at")
+
+    // Relations
+    maintainers  ProjectMaintainer[]
+    repositories Repository[]
+
+    @@index([name])
+    @@index([isActive])
+    @@map("projects")
+}
+
+model ProjectMaintainer {
+    id        String @id @default(uuid())
+    projectId String @map("project_id")
+    userId    String @map("user_id")
+    role      String @default("maintainer") @db.VarChar(50) // maintainer, admin
+
+    // Timestamps
+    createdAt DateTime @default(now()) @map("created_at")
+
+    // Relations
+    project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+    user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+    @@unique([projectId, userId])
+    @@index([projectId])
+    @@index([userId])
+    @@map("project_maintainers")
+}
+
+model Repository {
+    id            String  @id @default(uuid())
+    projectId     String  @map("project_id")
+    githubRepoId  BigInt  @unique @map("github_repo_id")
+    name          String  @db.VarChar(255)
+    fullName      String  @map("full_name") @db.VarChar(255) // owner/repo
+    defaultBranch String  @default("main") @map("default_branch") @db.VarChar(100)
+    isActive      Boolean @default(true) @map("is_active")
+
+    // Timestamps
+    createdAt DateTime @default(now()) @map("created_at")
+    updatedAt DateTime @updatedAt @map("updated_at")
+
+    // Relations
+    project      Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
+    pullRequests PullRequest[]
+
+    @@index([projectId])
+    @@index([githubRepoId])
+    @@index([isActive])
+    @@map("repositories")
+}
+
+// ============================================================================
+// PULL REQUESTS & REVIEWS
+// ============================================================================
+
+model PullRequest {
+    id           String @id @default(uuid())
+    repositoryId String @map("repository_id")
+    authorId     String @map("author_id")
+    githubPrId   BigInt @unique @map("github_pr_id")
+    prNumber     Int    @map("pr_number")
+    title        String @db.VarChar(500)
+    status       String @db.VarChar(50) // OPEN, UNDER_REVIEW, CHANGES_REQUESTED, APPROVED, MERGED, CLOSED
+    score        Int    @default(0)
+
+    // GitHub metadata
+    githubUrl String @map("github_url") @db.VarChar(512)
+    diffSize  Int?   @map("diff_size") // Lines changed
+
+    // Timestamps
+    openedAt  DateTime  @map("opened_at")
+    mergedAt  DateTime? @map("merged_at")
+    closedAt  DateTime? @map("closed_at")
+    createdAt DateTime  @default(now()) @map("created_at")
+    updatedAt DateTime  @updatedAt @map("updated_at")
+
+    // Relations
+    repository   Repository         @relation(fields: [repositoryId], references: [id], onDelete: Cascade)
+    author       User               @relation(fields: [authorId], references: [id], onDelete: Cascade)
+    reviews      PRReview[]
+    transactions PointTransaction[]
+
+    @@unique([repositoryId, prNumber])
+    @@index([repositoryId])
+    @@index([authorId])
+    @@index([githubPrId])
+    @@index([status])
+    @@map("pull_requests")
+}
+
+model PRReview {
+    id            String  @id @default(uuid())
+    pullRequestId String  @map("pull_request_id")
+    reviewerId    String  @map("reviewer_id")
+    status        String  @db.VarChar(50) // PENDING, APPROVED, CHANGES_REQUESTED, REJECTED
+    rating        Int? // 1-5 quality rating
+    comment       String? @db.Text
+
+    // Timestamps
+    createdAt DateTime @default(now()) @map("created_at")
+    updatedAt DateTime @updatedAt @map("updated_at")
+
+    // Relations
+    pullRequest PullRequest @relation(fields: [pullRequestId], references: [id], onDelete: Cascade)
+    reviewer    User        @relation(fields: [reviewerId], references: [id], onDelete: Cascade)
+
+    @@index([pullRequestId])
+    @@index([reviewerId])
+    @@map("pr_reviews")
+}
+
+// ============================================================================
+// SCORING & LEADERBOARD
+// ============================================================================
+
+model PointTransaction {
+    id            String  @id @default(uuid())
+    userId        String  @map("user_id")
+    pullRequestId String? @map("pull_request_id")
+    points        Int // Can be positive or negative
+    reason        String  @db.VarChar(255) // PR_OPENED, PR_MERGED, QUALITY_BONUS, SPAM_PENALTY
+    metadata      Json? // Additional context
+
+    // Timestamps
+    createdAt DateTime @default(now()) @map("created_at")
+
+    // Relations
+    user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+    pullRequest PullRequest? @relation(fields: [pullRequestId], references: [id], onDelete: SetNull)
+
+    @@index([userId])
+    @@index([pullRequestId])
+    @@index([createdAt])
+    @@map("point_transactions")
+}
+
+// ============================================================================
+// BADGES & ACHIEVEMENTS
+// ============================================================================
+
+model Badge {
+    id          String  @id @default(uuid())
+    name        String  @unique @db.VarChar(100)
+    description String  @db.Text
+    iconUrl     String? @map("icon_url") @db.VarChar(512)
+    criteria    Json // Criteria for earning badge
+
+    // Timestamps
+    createdAt DateTime @default(now()) @map("created_at")
+
+    // Relations
+    userBadges UserBadge[]
+
+    @@index([name])
+    @@map("badges")
+}
+
+model UserBadge {
+    id       String   @id @default(uuid())
+    userId   String   @map("user_id")
+    badgeId  String   @map("badge_id")
+    earnedAt DateTime @default(now()) @map("earned_at")
+
+    // Relations
+    user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+    badge Badge @relation(fields: [badgeId], references: [id], onDelete: Cascade)
+
+    @@unique([userId, badgeId])
+    @@index([userId])
+    @@index([badgeId])
+    @@map("user_badges")
+}
+
+// ============================================================================
+// AUDIT & SECURITY
+// ============================================================================
+
+model AuditLog {
+    id        String  @id @default(uuid())
+    userId    String? @map("user_id")
+    action    String  @db.VarChar(100) // USER_LOGIN, PR_CREATED, USER_BANNED, etc.
+    entity    String? @db.VarChar(50) // user, project, pr, etc.
+    entityId  String? @map("entity_id")
+    metadata  Json? // Additional context
+    ipAddress String? @map("ip_address") @db.VarChar(45)
+
+    // Timestamps
+    createdAt DateTime @default(now()) @map("created_at")
+
+    // Relations
+    user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+    @@index([userId])
+    @@index([action])
+    @@index([createdAt])
+    @@map("audit_logs")
+}
