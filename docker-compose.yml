@@ -1,0 +1,86 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: contriverse_postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-contriverse}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-contriverse_dev_password}
+      POSTGRES_DB: ${POSTGRES_DB:-contriverse_db}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-contriverse}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - contriverse_network
+
+  redis:
+    image: redis:7-alpine
+    container_name: contriverse_redis
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - contriverse_network
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: contriverse_backend
+    command: uvicorn backend.main:app --host 0.0.0.0 --port 8000 --reload
+    ports:
+      - "${BACKEND_PORT:-8000}:8000"
+    volumes:
+      - .:/app
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-contriverse}:${POSTGRES_PASSWORD:-contriverse_dev_password}@postgres:5432/${POSTGRES_DB:-contriverse_db}
+      - REDIS_URL=redis://redis:6379/0
+      - ENVIRONMENT=development
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - contriverse_network
+
+  celery_worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: contriverse_celery_worker
+    command: celery -A backend.worker.celery_app worker --loglevel=info
+    volumes:
+      - .:/app
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-contriverse}:${POSTGRES_PASSWORD:-contriverse_dev_password}@postgres:5432/${POSTGRES_DB:-contriverse_db}
+      - REDIS_URL=redis://redis:6379/0
+      - ENVIRONMENT=development
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - contriverse_network
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  contriverse_network:
+    driver: bridge
