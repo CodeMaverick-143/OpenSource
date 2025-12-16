@@ -1,6 +1,6 @@
-# 📄 PRD — Open Contribution Platform (Working Title: **ContriVerse**)
+# PRD — Open Contribution Platform (Working Title: **ContriVerse**)
 
-## 1. 🎯 Product Vision
+## 1. Product Vision
 
 A platform where:
 
@@ -17,7 +17,7 @@ Turn open-source contribution into a **measurable, competitive, and visible syst
 
 ---
 
-## 2. 👥 User Roles
+## 2. User Roles
 
 ### 2.1 Visitor (Unauthenticated)
 
@@ -51,7 +51,7 @@ Turn open-source contribution into a **measurable, competitive, and visible syst
 
 ---
 
-## 3. 🧱 Core Features
+## 3. Core Features
 
 ---
 

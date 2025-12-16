@@ -59,6 +59,26 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
 
+    # JWT
+    JWT_ALGORITHM: str = "HS256"
+
+    # GitHub OAuth (required for authentication)
+    GITHUB_CLIENT_ID: str
+    GITHUB_CLIENT_SECRET: str
+    GITHUB_REDIRECT_URI: str = "http://localhost:8000/api/v1/auth/github/callback"
+
+    @field_validator("GITHUB_CLIENT_ID", "GITHUB_CLIENT_SECRET")
+    @classmethod
+    def validate_github_oauth(cls, v: str, info) -> str:
+        """Ensure GitHub OAuth credentials are set."""
+        if not v:
+            field_name = info.field_name
+            raise ValueError(
+                f"{field_name} must be set. "
+                "Register a GitHub OAuth App at https://github.com/settings/developers"
+            )
+        return v
+
     @field_validator("SECRET_KEY")
     @classmethod
     def validate_secret_key(cls, v: str) -> str:
