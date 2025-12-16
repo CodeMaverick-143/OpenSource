@@ -6,13 +6,13 @@ import structlog
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response, status
 from fastapi.responses import RedirectResponse
 from pydantic import BaseModel
-from sqlalchemy.ext.asyncio import AsyncSession
+from prisma import Prisma
+from prisma.models import User
 
 from backend.core.dependencies import get_current_active_user
 from backend.core.exceptions import ContriVerseException
 from backend.core.security import create_oauth_state
-from backend.db.session import get_db
-from backend.models.user import User
+from backend.db.prisma_client import get_db
 from backend.services.auth_service import AuthService
 
 router = APIRouter(tags=["authentication"])
@@ -37,7 +37,7 @@ class RefreshTokenRequest(BaseModel):
 class UserResponse(BaseModel):
     """User response model."""
 
-    id: int
+    id: str  # UUID
     github_id: int
     github_username: str
     avatar_url: str | None
@@ -82,7 +82,7 @@ async def github_login() -> RedirectResponse:
 async def github_callback(
     code: str = Query(..., description="GitHub OAuth authorization code"),
     state: str = Query(..., description="OAuth state parameter"),
-    db: AsyncSession = Depends(get_db),
+    db: Prisma = Depends(get_db),
 ) -> TokenResponse:
     """
     Handle GitHub OAuth callback.
@@ -90,7 +90,7 @@ async def github_callback(
     Args:
         code: Authorization code from GitHub
         state: OAuth state parameter for CSRF protection
-        db: Database session
+        db: Prisma client
 
     Returns:
         Access and refresh tokens
@@ -117,8 +117,8 @@ async def github_callback(
         logger.info(
             "github_oauth_completed",
             user_id=user.id,
-            github_id=user.github_id,
-            username=user.github_username,
+            github_id=user.githubId,
+            username=user.githubUsername,
         )
 
         return TokenResponse(access_token=access_token, refresh_token=refresh_token)
@@ -136,14 +136,14 @@ async def github_callback(
 
 @router.post("/refresh", response_model=TokenResponse)
 async def refresh_token(
-    request: RefreshTokenRequest, db: AsyncSession = Depends(get_db)
+    request: RefreshTokenRequest, db: Prisma = Depends(get_db)
 ) -> TokenResponse:
     """
     Refresh access token using refresh token.
 
     Args:
         request: Refresh token request
-        db: Database session
+        db: Prisma client
 
     Returns:
         New access and refresh tokens
@@ -174,13 +174,13 @@ async def refresh_token(
 
 
 @router.post("/logout", status_code=status.HTTP_204_NO_CONTENT)
-async def logout(request: RefreshTokenRequest, db: AsyncSession = Depends(get_db)) -> None:
+async def logout(request: RefreshTokenRequest, db: Prisma = Depends(get_db)) -> None:
     """
     Logout user by invalidating refresh token.
 
     Args:
         request: Refresh token request
-        db: Database session
+        db: Prisma client
     """
     try:
         auth_service = AuthService(db)
@@ -209,4 +209,12 @@ async def get_current_user_info(
     """
     logger.debug("user_info_requested", user_id=current_user.id)
 
-    return UserResponse.model_validate(current_user)
+    return UserResponse(
+        id=current_user.id,
+        github_id=current_user.githubId,
+        github_username=current_user.githubUsername,
+        avatar_url=current_user.avatarUrl,
+        email=current_user.email,
+        total_points=current_user.totalPoints,
+        rank=current_user.rank,
+    )

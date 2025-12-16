@@ -1,19 +1,18 @@
 """
 Authentication service for OAuth flow and session management.
+Refactored to use Prisma ORM.
 """
 
 from datetime import datetime, timedelta
 from typing import Optional
 
 import structlog
-from sqlalchemy import delete, select
-from sqlalchemy.ext.asyncio import AsyncSession
+from prisma import Prisma
+from prisma.models import RefreshToken, User
 
 from backend.core.config import settings
 from backend.core.oauth import github_oauth_client
 from backend.core.security import create_access_token, create_refresh_token, hash_token
-from backend.models.refresh_token import RefreshToken
-from backend.models.user import User
 from backend.services.user_service import UserService
 
 logger = structlog.get_logger(__name__)
@@ -22,8 +21,8 @@ logger = structlog.get_logger(__name__)
 class AuthService:
     """Service for authentication and session management."""
 
-    def __init__(self, db: AsyncSession):
-        """Initialize auth service."""
+    def __init__(self, db: Prisma):
+        """Initialize auth service with Prisma client."""
         self.db = db
         self.user_service = UserService(db)
 
@@ -47,22 +46,22 @@ class AuthService:
         user, created = await self.user_service.get_or_create_from_github(github_data)
 
         if created:
-            logger.info("new_user_authenticated", user_id=user.id, github_id=user.github_id)
+            logger.info("new_user_authenticated", user_id=user.id, github_id=user.githubId)
         else:
-            logger.info("existing_user_authenticated", user_id=user.id, github_id=user.github_id)
+            logger.info("existing_user_authenticated", user_id=user.id, github_id=user.githubId)
 
         # Generate tokens
-        access_token = create_access_token(user.id, user.github_id)
+        access_token = create_access_token(user.id, user.githubId)
         refresh_token = await self.create_refresh_token(user.id)
 
         return access_token, refresh_token, user
 
-    async def create_refresh_token(self, user_id: int) -> str:
+    async def create_refresh_token(self, user_id: str) -> str:
         """
         Create and store a refresh token.
 
         Args:
-            user_id: User ID
+            user_id: User ID (UUID string)
 
         Returns:
             Refresh token
@@ -75,12 +74,9 @@ class AuthService:
         expires_at = datetime.utcnow() + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
 
         # Store in database
-        refresh_token_record = RefreshToken(
-            token=token_hash, user_id=user_id, expires_at=expires_at
+        await self.db.refreshtoken.create(
+            data={"token": token_hash, "userId": user_id, "expiresAt": expires_at}
         )
-
-        self.db.add(refresh_token_record)
-        await self.db.flush()
 
         logger.debug("refresh_token_created", user_id=user_id, expires_at=expires_at.isoformat())
 
@@ -103,33 +99,34 @@ class AuthService:
         token_hash = hash_token(refresh_token)
 
         # Find refresh token
-        result = await self.db.execute(
-            select(RefreshToken).where(RefreshToken.token == token_hash)
-        )
-        token_record = result.scalar_one_or_none()
+        token_record = await self.db.refreshtoken.find_unique(where={"token": token_hash})
 
         if not token_record:
             logger.warning("refresh_token_not_found")
             raise ValueError("Invalid refresh token")
 
         # Check expiry
-        if token_record.is_expired:
-            logger.warning("refresh_token_expired", user_id=token_record.user_id)
-            await self.db.delete(token_record)
-            await self.db.flush()
+        if token_record.expiresAt < datetime.utcnow():
+            logger.warning("refresh_token_expired", user_id=token_record.userId)
+            await self.db.refreshtoken.delete(where={"id": token_record.id})
             raise ValueError("Refresh token expired")
 
         # Get user
-        user = await self.user_service.get_by_id(token_record.user_id)
-        if not user or not user.is_active:
-            logger.warning("refresh_token_user_inactive", user_id=token_record.user_id)
+        user = await self.user_service.get_by_id(token_record.userId)
+        if not user:
+            logger.warning("refresh_token_user_not_found", user_id=token_record.userId)
+            raise ValueError("User not found")
+
+        # Check if user is active
+        is_active = not user.isBanned and not user.isDeleted
+        if not is_active:
+            logger.warning("refresh_token_user_inactive", user_id=token_record.userId)
             raise ValueError("User is not active")
 
         # Rotate tokens: delete old, create new
-        await self.db.delete(token_record)
-        await self.db.flush()
+        await self.db.refreshtoken.delete(where={"id": token_record.id})
 
-        new_access_token = create_access_token(user.id, user.github_id)
+        new_access_token = create_access_token(user.id, user.githubId)
         new_refresh_token = await self.create_refresh_token(user.id)
 
         logger.info("tokens_refreshed", user_id=user.id)
@@ -146,13 +143,10 @@ class AuthService:
         token_hash = hash_token(refresh_token)
 
         # Delete refresh token
-        result = await self.db.execute(
-            delete(RefreshToken).where(RefreshToken.token == token_hash)
-        )
-
-        if result.rowcount > 0:
+        try:
+            await self.db.refreshtoken.delete(where={"token": token_hash})
             logger.info("user_logged_out")
-        else:
+        except Exception:
             logger.debug("logout_token_not_found")
 
     async def cleanup_expired_tokens(self) -> int:
@@ -162,11 +156,11 @@ class AuthService:
         Returns:
             Number of tokens deleted
         """
-        result = await self.db.execute(
-            delete(RefreshToken).where(RefreshToken.expires_at < datetime.utcnow())
+        result = await self.db.refreshtoken.delete_many(
+            where={"expiresAt": {"lt": datetime.utcnow()}}
         )
 
-        count = result.rowcount
+        count = result
         if count > 0:
             logger.info("expired_tokens_cleaned", count=count)
 

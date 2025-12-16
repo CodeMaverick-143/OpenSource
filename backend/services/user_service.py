@@ -1,15 +1,14 @@
 """
 User service for CRUD operations and business logic.
+Refactored to use Prisma ORM.
 """
 
 from datetime import datetime
 from typing import Optional
 
 import structlog
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
-
-from backend.models.user import User
+from prisma import Prisma
+from prisma.models import User
 
 logger = structlog.get_logger(__name__)
 
@@ -17,22 +16,21 @@ logger = structlog.get_logger(__name__)
 class UserService:
     """Service for user-related operations."""
 
-    def __init__(self, db: AsyncSession):
-        """Initialize user service."""
+    def __init__(self, db: Prisma):
+        """Initialize user service with Prisma client."""
         self.db = db
 
-    async def get_by_id(self, user_id: int) -> Optional[User]:
+    async def get_by_id(self, user_id: str) -> Optional[User]:
         """
-        Get user by internal ID.
+        Get user by internal ID (UUID).
 
         Args:
-            user_id: Internal user ID
+            user_id: Internal user ID (UUID string)
 
         Returns:
             User if found, None otherwise
         """
-        result = await self.db.execute(select(User).where(User.id == user_id))
-        return result.scalar_one_or_none()
+        return await self.db.user.find_unique(where={"id": user_id})
 
     async def get_by_github_id(self, github_id: int) -> Optional[User]:
         """
@@ -44,8 +42,7 @@ class UserService:
         Returns:
             User if found, None otherwise
         """
-        result = await self.db.execute(select(User).where(User.github_id == github_id))
-        return result.scalar_one_or_none()
+        return await self.db.user.find_unique(where={"githubId": github_id})
 
     async def create_from_github(self, github_data: dict) -> User:
         """
@@ -57,24 +54,22 @@ class UserService:
         Returns:
             Created user
         """
-        user = User(
-            github_id=github_data["id"],
-            github_username=github_data["login"],
-            avatar_url=github_data.get("avatar_url"),
-            profile_url=github_data.get("html_url"),
-            email=github_data.get("email"),
-            last_login_at=datetime.utcnow(),
+        user = await self.db.user.create(
+            data={
+                "githubId": github_data["id"],
+                "githubUsername": github_data["login"],
+                "avatarUrl": github_data.get("avatar_url"),
+                "profileUrl": github_data.get("html_url"),
+                "email": github_data.get("email"),
+                "lastLoginAt": datetime.utcnow(),
+            }
         )
-
-        self.db.add(user)
-        await self.db.flush()
-        await self.db.refresh(user)
 
         logger.info(
             "user_created_from_github",
             user_id=user.id,
-            github_id=user.github_id,
-            username=user.github_username,
+            github_id=user.githubId,
+            username=user.githubUsername,
         )
 
         return user
@@ -91,7 +86,7 @@ class UserService:
         Returns:
             Updated user
         """
-        old_username = user.github_username
+        old_username = user.githubUsername
         new_username = github_data["login"]
 
         # Detect username change
@@ -99,24 +94,26 @@ class UserService:
             logger.info(
                 "github_username_changed",
                 user_id=user.id,
-                github_id=user.github_id,
+                github_id=user.githubId,
                 old_username=old_username,
                 new_username=new_username,
             )
 
         # Update mutable fields
-        user.github_username = new_username
-        user.avatar_url = github_data.get("avatar_url")
-        user.profile_url = github_data.get("html_url")
-        user.email = github_data.get("email")
-        user.last_login_at = datetime.utcnow()
+        updated_user = await self.db.user.update(
+            where={"id": user.id},
+            data={
+                "githubUsername": new_username,
+                "avatarUrl": github_data.get("avatar_url"),
+                "profileUrl": github_data.get("html_url"),
+                "email": github_data.get("email"),
+                "lastLoginAt": datetime.utcnow(),
+            },
+        )
 
-        await self.db.flush()
-        await self.db.refresh(user)
+        logger.debug("user_updated_from_github", user_id=user.id, github_id=user.githubId)
 
-        logger.debug("user_updated_from_github", user_id=user.id, github_id=user.github_id)
-
-        return user
+        return updated_user
 
     async def get_or_create_from_github(self, github_data: dict) -> tuple[User, bool]:
         """
@@ -152,13 +149,13 @@ class UserService:
         Returns:
             Updated user
         """
-        user.is_deleted = True
-        await self.db.flush()
-        await self.db.refresh(user)
+        updated_user = await self.db.user.update(
+            where={"id": user.id}, data={"isDeleted": True}
+        )
 
-        logger.info("user_soft_deleted", user_id=user.id, github_id=user.github_id)
+        logger.info("user_soft_deleted", user_id=user.id, github_id=user.githubId)
 
-        return user
+        return updated_user
 
     async def ban(self, user: User) -> User:
         """
@@ -170,13 +167,11 @@ class UserService:
         Returns:
             Updated user
         """
-        user.is_banned = True
-        await self.db.flush()
-        await self.db.refresh(user)
+        updated_user = await self.db.user.update(where={"id": user.id}, data={"isBanned": True})
 
-        logger.warning("user_banned", user_id=user.id, github_id=user.github_id)
+        logger.warning("user_banned", user_id=user.id, github_id=user.githubId)
 
-        return user
+        return updated_user
 
     async def unban(self, user: User) -> User:
         """
@@ -188,10 +183,10 @@ class UserService:
         Returns:
             Updated user
         """
-        user.is_banned = False
-        await self.db.flush()
-        await self.db.refresh(user)
+        updated_user = await self.db.user.update(
+            where={"id": user.id}, data={"isBanned": False}
+        )
 
-        logger.info("user_unbanned", user_id=user.id, github_id=user.github_id)
+        logger.info("user_unbanned", user_id=user.id, github_id=user.githubId)
 
-        return user
+        return updated_user

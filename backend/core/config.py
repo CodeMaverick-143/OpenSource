@@ -62,17 +62,26 @@ class Settings(BaseSettings):
     LOG_LEVEL: str = "INFO"
     LOG_FORMAT: Literal["json", "console"] = "json"
 
-    # GitHub OAuth
-    GITHUB_CLIENT_ID: str = ""
-    GITHUB_CLIENT_SECRET: str = ""
-    GITHUB_REDIRECT_URI: str = ""
-
-    # Security
+    # JWT
+    JWT_ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
 
-    # JWT
-    JWT_ALGORITHM: str = "HS256"
+    # GitHub Integration
+    GITHUB_WEBHOOK_SECRET: str
+    GITHUB_APP_ID: Optional[str] = None
+    GITHUB_APP_PRIVATE_KEY: Optional[str] = None
+
+    # API Configuration
+    API_BASE_URL: str = "http://localhost:8000"  # Base URL for webhooks
+
+    @field_validator("GITHUB_WEBHOOK_SECRET")
+    @classmethod
+    def validate_webhook_secret(cls, v: str) -> str:
+        """Ensure webhook secret is set."""
+        if not v:
+            raise ValueError("GITHUB_WEBHOOK_SECRET must be set for webhook security")
+        return v
 
     # GitHub OAuth (required for authentication)
     GITHUB_CLIENT_ID: str

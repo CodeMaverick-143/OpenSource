@@ -18,12 +18,12 @@ logger = structlog.get_logger(__name__)
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
-def create_access_token(user_id: int, github_id: int) -> str:
+def create_access_token(user_id: str, github_id: int) -> str:
     """
     Create a short-lived JWT access token.
 
     Args:
-        user_id: Internal user ID
+        user_id: Internal user ID (UUID string)
         github_id: GitHub user ID
 
     Returns:
@@ -33,7 +33,7 @@ def create_access_token(user_id: int, github_id: int) -> str:
     expire = datetime.utcnow() + expires_delta
 
     payload = {
-        "sub": str(user_id),
+        "sub": user_id,  # UUID string
         "github_id": github_id,
         "exp": expire,
         "iat": datetime.utcnow(),
@@ -114,7 +114,7 @@ def decode_access_token(token: str) -> Optional[dict[str, Any]]:
         return None
 
 
-def get_user_id_from_token(token: str) -> Optional[int]:
+def get_user_id_from_token(token: str) -> Optional[str]:
     """
     Extract user ID from JWT token.
 
@@ -122,17 +122,18 @@ def get_user_id_from_token(token: str) -> Optional[int]:
         token: JWT token
 
     Returns:
-        User ID if valid, None otherwise
+        User ID (UUID string) if valid, None otherwise
     """
     payload = decode_access_token(token)
     if not payload:
         return None
 
-    try:
-        return int(payload.get("sub"))
-    except (TypeError, ValueError):
-        logger.warning("invalid_user_id_in_token", sub=payload.get("sub"))
+    user_id = payload.get("sub")
+    if not user_id or not isinstance(user_id, str):
+        logger.warning("invalid_user_id_in_token", sub=user_id)
         return None
+
+    return user_id
 
 
 def create_oauth_state() -> str:

@@ -50,6 +50,8 @@ model User {
     pointTransactions  PointTransaction[]
     userBadges         UserBadge[]
     auditLogs          AuditLog[]
+    githubTokens       GitHubToken[]
+    ownedProjects      Project[] // Projects where user is owner
 
     @@index([githubId])
     @@index([githubUsername])
@@ -76,23 +78,29 @@ model RefreshToken {
 // ============================================================================
 
 model Project {
-    id          String   @id @default(uuid())
-    name        String   @db.VarChar(255)
-    description String?  @db.Text
-    tags        String[] // Array of tags (frontend, backend, ML, etc.)
-    difficulty  String   @db.VarChar(50) // beginner, intermediate, advanced
-    rules       Json? // Contribution rules as JSON
-    isActive    Boolean  @default(true) @map("is_active")
+    id           String   @id @default(uuid())
+    slug         String   @unique @db.VarChar(255) // URL-safe unique identifier
+    name         String   @db.VarChar(255)
+    description  String?  @db.Text
+    tags         String[] // Array of tags (frontend, backend, ML, etc.)
+    difficulty   String   @db.VarChar(50) // beginner, intermediate, advanced
+    rules        Json? // Contribution rules as JSON
+    rulesVersion Int      @default(1) @map("rules_version") // Rules version for non-retroactive changes
+    ownerId      String   @map("owner_id") // Project owner (creator)
+    isActive     Boolean  @default(true) @map("is_active")
 
     // Timestamps
     createdAt DateTime @default(now()) @map("created_at")
     updatedAt DateTime @updatedAt @map("updated_at")
 
     // Relations
+    owner        User                @relation(fields: [ownerId], references: [id], onDelete: Cascade)
     maintainers  ProjectMaintainer[]
     repositories Repository[]
 
-    @@index([name])
+    @@unique([name]) // Enforce project name uniqueness
+    @@index([slug])
+    @@index([ownerId])
     @@index([isActive])
     @@map("projects")
 }
@@ -101,7 +109,7 @@ model ProjectMaintainer {
     id        String @id @default(uuid())
     projectId String @map("project_id")
     userId    String @map("user_id")
-    role      String @default("maintainer") @db.VarChar(50) // maintainer, admin
+    role      String @default("maintainer") @db.VarChar(50) // owner, maintainer
 
     // Timestamps
     createdAt DateTime @default(now()) @map("created_at")
@@ -113,17 +121,21 @@ model ProjectMaintainer {
     @@unique([projectId, userId])
     @@index([projectId])
     @@index([userId])
+    @@index([role])
     @@map("project_maintainers")
 }
 
 model Repository {
-    id            String  @id @default(uuid())
-    projectId     String  @map("project_id")
-    githubRepoId  BigInt  @unique @map("github_repo_id")
-    name          String  @db.VarChar(255)
-    fullName      String  @map("full_name") @db.VarChar(255) // owner/repo
-    defaultBranch String  @default("main") @map("default_branch") @db.VarChar(100)
-    isActive      Boolean @default(true) @map("is_active")
+    id             String    @id @default(uuid())
+    projectId      String    @map("project_id")
+    githubRepoId   BigInt    @unique @map("github_repo_id")
+    name           String    @db.VarChar(255)
+    fullName       String    @map("full_name") @db.VarChar(255) // owner/repo
+    defaultBranch  String    @default("main") @map("default_branch") @db.VarChar(100)
+    isActive       Boolean   @default(true) @map("is_active")
+    syncStatus     String    @default("synced") @map("sync_status") @db.VarChar(50) // synced, pending, failed
+    lastSyncedAt   DateTime? @map("last_synced_at")
+    disabledReason String?   @map("disabled_reason") @db.Text // Reason for disabling (deleted, private, etc.)
 
     // Timestamps
     createdAt DateTime @default(now()) @map("created_at")
@@ -136,6 +148,7 @@ model Repository {
     @@index([projectId])
     @@index([githubRepoId])
     @@index([isActive])
+    @@index([syncStatus])
     @@map("repositories")
 }
 
@@ -284,4 +297,55 @@ model AuditLog {
     @@index([action])
     @@index([createdAt])
     @@map("audit_logs")
+}
+
+// ============================================================================
+// GITHUB INTEGRATION
+// ============================================================================
+
+model GitHubToken {
+    id           String    @id @default(uuid())
+    userId       String    @map("user_id")
+    accessToken  String    @map("access_token") @db.VarChar(512) // Encrypted
+    tokenType    String    @default("oauth") @map("token_type") @db.VarChar(50) // oauth, app
+    scope        String?   @db.VarChar(255) // OAuth scopes
+    expiresAt    DateTime? @map("expires_at") // For GitHub Apps
+    isRevoked    Boolean   @default(false) @map("is_revoked")
+    lastUsedAt   DateTime? @map("last_used_at")
+    lastVerified DateTime? @map("last_verified")
+
+    // Timestamps
+    createdAt DateTime @default(now()) @map("created_at")
+    updatedAt DateTime @updatedAt @map("updated_at")
+
+    // Relations
+    user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+    @@unique([userId, tokenType])
+    @@index([userId])
+    @@index([isRevoked])
+    @@map("github_tokens")
+}
+
+model WebhookDelivery {
+    id           String    @id @default(uuid())
+    deliveryId   String    @unique @map("delivery_id") @db.VarChar(255) // GitHub's X-GitHub-Delivery header
+    eventType    String    @map("event_type") @db.VarChar(100) // pull_request, push, repository
+    action       String?   @db.VarChar(100) // opened, closed, synchronize, etc.
+    repositoryId String?   @map("repository_id")
+    payload      Json // Full webhook payload
+    processed    Boolean   @default(false)
+    processedAt  DateTime? @map("processed_at")
+    failureCount Int       @default(0) @map("failure_count")
+    lastError    String?   @map("last_error") @db.Text
+
+    // Timestamps
+    receivedAt DateTime @default(now()) @map("received_at")
+    createdAt  DateTime @default(now()) @map("created_at")
+
+    @@index([deliveryId])
+    @@index([eventType])
+    @@index([processed])
+    @@index([receivedAt])
+    @@map("webhook_deliveries")
 }
