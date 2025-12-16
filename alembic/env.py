@@ -13,6 +13,9 @@ from alembic import context
 from backend.core.config import settings
 from backend.db.base import Base
 
+# Import all models for autogenerate support
+from backend.models import RefreshToken, User  # noqa: F401
+
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config

@@ -30,18 +30,18 @@
 
 ### GitHub OAuth
 
-* [ ] Register GitHub OAuth App
-* [ ] Implement OAuth login flow
-* [ ] Store GitHub user identity
-* [ ] Handle username changes
-* [ ] Handle revoked access
-* [ ] Implement logout
+* [x] Register GitHub OAuth App
+* [x] Implement OAuth login flow
+* [x] Store GitHub user identity
+* [x] Handle username changes
+* [x] Handle revoked access
+* [x] Implement logout
 
 ### Edge Cases
 
-* [ ] Duplicate GitHub accounts prevention
-* [ ] Soft-delete users
-* [ ] Ban / unban users
+* [x] Duplicate GitHub accounts prevention
+* [x] Soft-delete users
+* [x] Ban / unban users
 
 ---
 

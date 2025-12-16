@@ -67,6 +67,28 @@ tests/              # Test suite
    - API Docs: http://localhost:8000/docs
    - Health Check: http://localhost:8000/api/v1/health
 
+### Authentication Setup (GitHub OAuth)
+
+Before using the application, you must configure GitHub OAuth:
+
+1. **Register GitHub OAuth App**
+   - Go to https://github.com/settings/developers
+   - Click "New OAuth App"
+   - Set callback URL to: `http://localhost:8000/api/v1/auth/github/callback`
+   - See [docs/GITHUB_OAUTH_SETUP.md](docs/GITHUB_OAUTH_SETUP.md) for detailed instructions
+
+2. **Configure environment variables**
+   ```bash
+   # Update .env with your OAuth credentials
+   GITHUB_CLIENT_ID=your_client_id_here
+   GITHUB_CLIENT_SECRET=your_client_secret_here
+   ```
+
+3. **Test authentication**
+   - Visit: http://localhost:8000/api/v1/auth/github/login
+   - Authorize on GitHub
+   - You'll receive JWT tokens for API access
+
 ### Manual Setup (Without Docker)
 
 1. **Create virtual environment**
