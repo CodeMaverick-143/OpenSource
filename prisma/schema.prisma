@@ -52,6 +52,7 @@ model User {
     auditLogs          AuditLog[]
     githubTokens       GitHubToken[]
     ownedProjects      Project[] // Projects where user is owner
+    reviewComments     ReviewComment[]
 
     @@index([githubId])
     @@index([githubUsername])
@@ -170,18 +171,25 @@ model PullRequest {
     githubUrl String @map("github_url") @db.VarChar(512)
     diffSize  Int?   @map("diff_size") // Lines changed
 
-    // Timestamps
-    openedAt  DateTime  @map("opened_at")
-    mergedAt  DateTime? @map("merged_at")
-    closedAt  DateTime? @map("closed_at")
-    createdAt DateTime  @default(now()) @map("created_at")
-    updatedAt DateTime  @updatedAt @map("updated_at")
+    // Lifecycle timestamps
+    openedAt     DateTime  @map("opened_at")
+    reviewedAt   DateTime? @map("reviewed_at") // When first review started
+    approvedAt   DateTime? @map("approved_at") // When approved
+    mergedAt     DateTime? @map("merged_at")
+    closedAt     DateTime? @map("closed_at")
+    lastSyncedAt DateTime? @map("last_synced_at") // Last sync from GitHub
+    createdAt    DateTime  @default(now()) @map("created_at")
+    updatedAt    DateTime  @updatedAt @map("updated_at")
+
+    // Scoring metadata
+    scoringMetadata Json? @map("scoring_metadata") // Scoring calculation details
 
     // Relations
-    repository   Repository         @relation(fields: [repositoryId], references: [id], onDelete: Cascade)
-    author       User               @relation(fields: [authorId], references: [id], onDelete: Cascade)
-    reviews      PRReview[]
-    transactions PointTransaction[]
+    repository     Repository         @relation(fields: [repositoryId], references: [id], onDelete: Cascade)
+    author         User               @relation(fields: [authorId], references: [id], onDelete: Cascade)
+    reviews        PRReview[]
+    transactions   PointTransaction[]
+    reviewComments ReviewComment[]
 
     @@unique([repositoryId, prNumber])
     @@index([repositoryId])
@@ -192,12 +200,16 @@ model PullRequest {
 }
 
 model PRReview {
-    id            String  @id @default(uuid())
-    pullRequestId String  @map("pull_request_id")
-    reviewerId    String  @map("reviewer_id")
-    status        String  @db.VarChar(50) // PENDING, APPROVED, CHANGES_REQUESTED, REJECTED
-    rating        Int? // 1-5 quality rating
-    comment       String? @db.Text
+    id              String  @id @default(uuid())
+    pullRequestId   String  @map("pull_request_id")
+    reviewerId      String  @map("reviewer_id")
+    action          String  @db.VarChar(50) // STARTED_REVIEW, REQUESTED_CHANGES, APPROVED, COMMENTED
+    status          String  @db.VarChar(50) // PENDING, APPROVED, CHANGES_REQUESTED, REJECTED
+    rating          Int? // 1-5 quality rating
+    comment         String? @db.Text // Public comment
+    internalComment String? @map("internal_comment") @db.Text // Platform-only comment
+    isConflicting   Boolean @default(false) @map("is_conflicting") // Marks conflicting reviews
+    resolvedBy      String? @map("resolved_by") // User ID who resolved conflict
 
     // Timestamps
     createdAt DateTime @default(now()) @map("created_at")
@@ -209,6 +221,8 @@ model PRReview {
 
     @@index([pullRequestId])
     @@index([reviewerId])
+    @@index([action])
+    @@index([isConflicting])
     @@map("pr_reviews")
 }
 
@@ -217,12 +231,13 @@ model PRReview {
 // ============================================================================
 
 model PointTransaction {
-    id            String  @id @default(uuid())
-    userId        String  @map("user_id")
-    pullRequestId String? @map("pull_request_id")
-    points        Int // Can be positive or negative
-    reason        String  @db.VarChar(255) // PR_OPENED, PR_MERGED, QUALITY_BONUS, SPAM_PENALTY
-    metadata      Json? // Additional context
+    id              String  @id @default(uuid())
+    userId          String  @map("user_id")
+    pullRequestId   String? @map("pull_request_id")
+    points          Int // Can be positive or negative
+    reason          String  @db.VarChar(255) // PR_OPENED, PR_MERGED, QUALITY_BONUS, SPAM_PENALTY
+    transactionType String  @default("AWARD") @map("transaction_type") @db.VarChar(50) // AWARD, BONUS, PENALTY, REVERSAL
+    metadata        Json? // Additional context
 
     // Timestamps
     createdAt DateTime @default(now()) @map("created_at")
@@ -234,6 +249,7 @@ model PointTransaction {
     @@index([userId])
     @@index([pullRequestId])
     @@index([createdAt])
+    @@index([transactionType])
     @@map("point_transactions")
 }
 
@@ -328,24 +344,67 @@ model GitHubToken {
 }
 
 model WebhookDelivery {
-    id           String    @id @default(uuid())
-    deliveryId   String    @unique @map("delivery_id") @db.VarChar(255) // GitHub's X-GitHub-Delivery header
-    eventType    String    @map("event_type") @db.VarChar(100) // pull_request, push, repository
-    action       String?   @db.VarChar(100) // opened, closed, synchronize, etc.
-    repositoryId String?   @map("repository_id")
-    payload      Json // Full webhook payload
-    processed    Boolean   @default(false)
-    processedAt  DateTime? @map("processed_at")
-    failureCount Int       @default(0) @map("failure_count")
-    lastError    String?   @map("last_error") @db.Text
-
-    // Timestamps
-    receivedAt DateTime @default(now()) @map("received_at")
-    createdAt  DateTime @default(now()) @map("created_at")
+    id             String    @id @default(uuid())
+    deliveryId     String    @unique @map("delivery_id") // GitHub delivery ID
+    eventType      String    @map("event_type") @db.VarChar(50) // pull_request, push, repository
+    action         String?   @db.VarChar(50) // opened, closed, etc.
+    repositoryId   String?   @map("repository_id") @db.VarChar(255) // GitHub repo ID as string
+    prId           String?   @map("pr_id") // Link to PullRequest if applicable
+    fingerprint    String?   @unique @db.VarChar(255) // Unique event fingerprint for deduplication
+    payload        Json // Full webhook payload
+    processed      Boolean   @default(false)
+    processedAt    DateTime? @map("processed_at")
+    scoringApplied Boolean   @default(false) @map("scoring_applied") // Track if scoring was applied
+    failureCount   Int       @default(0) @map("failure_count")
+    lastError      String?   @map("last_error") @db.Text
+    receivedAt     DateTime  @default(now()) @map("received_at")
+    createdAt      DateTime  @default(now()) @map("created_at")
 
     @@index([deliveryId])
     @@index([eventType])
     @@index([processed])
-    @@index([receivedAt])
+    @@index([fingerprint])
+    @@index([prId])
     @@map("webhook_deliveries")
+}
+
+// ============================================================================
+// REVIEW SYSTEM
+// ============================================================================
+
+model ReviewComment {
+    id            String  @id @default(uuid())
+    pullRequestId String  @map("pull_request_id")
+    reviewerId    String  @map("reviewer_id")
+    comment       String  @db.Text
+    isInternal    Boolean @default(true) @map("is_internal") // Platform-only comment
+
+    // Timestamps
+    createdAt DateTime @default(now()) @map("created_at")
+
+    // Relations
+    pullRequest PullRequest @relation(fields: [pullRequestId], references: [id], onDelete: Cascade)
+    reviewer    User        @relation(fields: [reviewerId], references: [id], onDelete: Cascade)
+
+    @@index([pullRequestId])
+    @@index([reviewerId])
+    @@map("review_comments")
+}
+
+model ReviewConflict {
+    id                 String    @id @default(uuid())
+    pullRequestId      String    @map("pull_request_id")
+    conflictingReviews Json      @map("conflicting_reviews") // Array of review IDs
+    resolutionMethod   String?   @map("resolution_method") @db.VarChar(50) // MAJORITY, OWNER_OVERRIDE, MANUAL
+    finalOutcome       String?   @map("final_outcome") @db.VarChar(50) // APPROVED, CHANGES_REQUESTED
+    resolvedBy         String?   @map("resolved_by") // User ID who resolved
+    resolvedAt         DateTime? @map("resolved_at")
+    isResolved         Boolean   @default(false) @map("is_resolved")
+
+    // Timestamps
+    createdAt DateTime @default(now()) @map("created_at")
+
+    @@index([pullRequestId])
+    @@index([isResolved])
+    @@map("review_conflicts")
 }
