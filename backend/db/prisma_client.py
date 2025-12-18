@@ -6,6 +6,7 @@ from contextlib import asynccontextmanager
 from typing import AsyncGenerator, Optional
 
 import structlog
+
 from prisma import Prisma
 
 logger = structlog.get_logger(__name__)
@@ -28,8 +29,7 @@ def get_prisma_client() -> Prisma:
 
     if _prisma_client is None:
         raise RuntimeError(
-            "Prisma client not initialized. "
-            "Call initialize_prisma() during application startup."
+            "Prisma client not initialized. " "Call initialize_prisma() during application startup."
         )
 
     return _prisma_client

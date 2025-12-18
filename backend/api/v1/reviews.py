@@ -4,7 +4,6 @@ Review management API endpoints.
 
 import structlog
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from prisma import Prisma
 from prisma.models import User
 from pydantic import BaseModel, Field
 
@@ -14,6 +13,7 @@ from backend.services.abuse_detector import AbuseDetector
 from backend.services.review_conflict_resolver import ReviewConflictResolver
 from backend.services.review_notifications import ReviewNotifications
 from backend.services.review_service import ReviewService
+from prisma import Prisma
 
 router = APIRouter(tags=["reviews"])
 logger = structlog.get_logger(__name__)

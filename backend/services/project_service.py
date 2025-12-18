@@ -7,7 +7,6 @@ from typing import List, Optional
 
 import structlog
 from fastapi import HTTPException, status
-from prisma import Prisma
 from prisma.models import Project, User
 
 from backend.schemas.project import (
@@ -16,6 +15,7 @@ from backend.schemas.project import (
     ProjectUpdate,
 )
 from backend.utils.slug import generate_unique_project_slug
+from prisma import Prisma
 
 logger = structlog.get_logger(__name__)
 
@@ -118,9 +118,7 @@ class ProjectService:
 
         return projects, total
 
-    async def update_project(
-        self, slug: str, data: ProjectUpdate, user: User
-    ) -> Project:
+    async def update_project(self, slug: str, data: ProjectUpdate, user: User) -> Project:
         """
         Update project metadata.
 
@@ -168,9 +166,7 @@ class ProjectService:
             update_data["difficulty"] = data.difficulty
 
         # Update project
-        updated_project = await self.db.project.update(
-            where={"id": project.id}, data=update_data
-        )
+        updated_project = await self.db.project.update(where={"id": project.id}, data=update_data)
 
         logger.info("project_updated", project_id=project.id, user_id=user.id)
 

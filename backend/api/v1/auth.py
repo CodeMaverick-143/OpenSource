@@ -5,15 +5,15 @@ Authentication API endpoints.
 import structlog
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response, status
 from fastapi.responses import RedirectResponse
-from pydantic import BaseModel
-from prisma import Prisma
 from prisma.models import User
+from pydantic import BaseModel
 
 from backend.core.dependencies import get_current_active_user
 from backend.core.exceptions import ContriVerseException
 from backend.core.security import create_oauth_state
 from backend.db.prisma_client import get_db
 from backend.services.auth_service import AuthService
+from prisma import Prisma
 
 router = APIRouter(tags=["authentication"])
 logger = structlog.get_logger(__name__)

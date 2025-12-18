@@ -6,9 +6,9 @@ from datetime import datetime
 from typing import Optional
 
 import structlog
-from prisma import Prisma
 
 from backend.integrations.github.webhook_handlers import get_handler
+from prisma import Prisma
 
 logger = structlog.get_logger(__name__)
 
@@ -22,9 +22,7 @@ class WebhookProcessor:
         """Initialize processor with database client."""
         self.db = db
 
-    async def process_webhook(
-        self, delivery_id: str, event_type: str, payload: dict
-    ) -> dict:
+    async def process_webhook(self, delivery_id: str, event_type: str, payload: dict) -> dict:
         """
         Process webhook with idempotency.
 

@@ -5,6 +5,7 @@ Advanced scoring engine with rule-based scoring and gaming prevention.
 from typing import Dict, Optional
 
 import structlog
+
 from prisma import Prisma
 
 logger = structlog.get_logger(__name__)
@@ -179,9 +180,7 @@ class ScoringEngine:
 
         return capped_score
 
-    async def should_award_points(
-        self, pr_id: str, event_action: str, pr_status: str
-    ) -> bool:
+    async def should_award_points(self, pr_id: str, event_action: str, pr_status: str) -> bool:
         """
         Check if points should be awarded for this event.
 

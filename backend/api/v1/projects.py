@@ -4,7 +4,6 @@ Project management API endpoints.
 
 import structlog
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from prisma import Prisma
 from prisma.models import User
 
 from backend.core.dependencies import get_current_active_user
@@ -22,6 +21,7 @@ from backend.schemas.project import (
 )
 from backend.services.maintainer_service import MaintainerService
 from backend.services.project_service import ProjectService
+from prisma import Prisma
 
 router = APIRouter(tags=["projects"])
 logger = structlog.get_logger(__name__)
@@ -153,7 +153,9 @@ async def list_maintainers(slug: str, db: Prisma = Depends(get_db)) -> Maintaine
     )
 
 
-@router.post("/{slug}/maintainers", response_model=MaintainerResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/{slug}/maintainers", response_model=MaintainerResponse, status_code=status.HTTP_201_CREATED
+)
 async def add_maintainer(
     slug: str,
     data: MaintainerAdd,

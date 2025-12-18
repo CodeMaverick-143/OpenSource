@@ -7,12 +7,12 @@ from typing import Optional
 import structlog
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-from prisma import Prisma
 from prisma.models import User
 
 from backend.core.security import get_user_id_from_token
 from backend.db.prisma_client import get_db
 from backend.services.user_service import UserService
+from prisma import Prisma
 
 logger = structlog.get_logger(__name__)
 

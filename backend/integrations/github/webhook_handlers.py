@@ -6,8 +6,9 @@ from datetime import datetime
 from typing import Any, Optional
 
 import structlog
-from prisma import Prisma
 from prisma.models import PullRequest, Repository, User
+
+from prisma import Prisma
 
 logger = structlog.get_logger(__name__)
 
@@ -121,9 +122,7 @@ class PullRequestHandler(WebhookHandler):
         )
 
         # Update user total points
-        await self.db.user.update(
-            where={"id": user.id}, data={"totalPoints": {"increment": 10}}
-        )
+        await self.db.user.update(where={"id": user.id}, data={"totalPoints": {"increment": 10}})
 
     async def _handle_synchronize(self, pr_data: dict) -> None:
         """Handle PR synchronize event (new commits pushed)."""

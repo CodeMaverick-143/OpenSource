@@ -5,6 +5,7 @@ Review notification triggers for state changes and conflicts.
 from typing import Optional
 
 import structlog
+
 from prisma import Prisma
 
 logger = structlog.get_logger(__name__)
@@ -62,9 +63,7 @@ class ReviewNotifications:
             reviewer_id: Reviewer user ID
             comment: Optional comment
         """
-        pr = await self.db.pullrequest.find_unique(
-            where={"id": pr_id}, include={"author": True}
-        )
+        pr = await self.db.pullrequest.find_unique(where={"id": pr_id}, include={"author": True})
 
         if not pr:
             return
@@ -86,9 +85,7 @@ class ReviewNotifications:
             pr_id: PR ID
             reviewer_id: Reviewer user ID
         """
-        pr = await self.db.pullrequest.find_unique(
-            where={"id": pr_id}, include={"author": True}
-        )
+        pr = await self.db.pullrequest.find_unique(where={"id": pr_id}, include={"author": True})
 
         if not pr:
             return
@@ -137,9 +134,7 @@ class ReviewNotifications:
         Args:
             pr_id: PR ID
         """
-        pr = await self.db.pullrequest.find_unique(
-            where={"id": pr_id}, include={"author": True}
-        )
+        pr = await self.db.pullrequest.find_unique(where={"id": pr_id}, include={"author": True})
 
         if not pr:
             return

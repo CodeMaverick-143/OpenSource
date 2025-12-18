@@ -51,8 +51,10 @@ model User {
     userBadges         UserBadge[]
     auditLogs          AuditLog[]
     githubTokens       GitHubToken[]
-    ownedProjects      Project[] // Projects where user is owner
+    ownedProjects      Project[]           @relation("ProjectOwner") // Projects where user is owner
     reviewComments     ReviewComment[]
+    rankSnapshots      RankSnapshot[]
+    projects           Project[]
 
     @@index([githubId])
     @@index([githubUsername])
@@ -87,6 +89,7 @@ model Project {
     difficulty   String   @db.VarChar(50) // beginner, intermediate, advanced
     rules        Json? // Contribution rules as JSON
     rulesVersion Int      @default(1) @map("rules_version") // Rules version for non-retroactive changes
+    scoringRules Json?    @map("scoring_rules") // Versioned scoring rules (base points, multipliers, penalties)
     ownerId      String   @map("owner_id") // Project owner (creator)
     isActive     Boolean  @default(true) @map("is_active")
 
@@ -95,9 +98,11 @@ model Project {
     updatedAt DateTime @updatedAt @map("updated_at")
 
     // Relations
-    owner        User                @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+    owner        User                @relation("ProjectOwner", fields: [ownerId], references: [id], onDelete: Cascade)
     maintainers  ProjectMaintainer[]
     repositories Repository[]
+    user         User?               @relation(fields: [userId], references: [id])
+    userId       String?
 
     @@unique([name]) // Enforce project name uniqueness
     @@index([slug])
@@ -407,4 +412,46 @@ model ReviewConflict {
     @@index([pullRequestId])
     @@index([isResolved])
     @@map("review_conflicts")
+}
+
+// ============================================================================
+// LEADERBOARD & RANKINGS
+// ============================================================================
+
+model RankSnapshot {
+    id              String   @id @default(uuid())
+    userId          String   @map("user_id")
+    leaderboardType String   @map("leaderboard_type") @db.VarChar(50) // GLOBAL, MONTHLY, PROJECT, SKILL
+    rank            Int
+    totalPoints     Int      @map("total_points")
+    period          String?  @db.VarChar(50) // For monthly: "2025-01", for project: project_id
+    snapshotAt      DateTime @map("snapshot_at")
+
+    // Timestamps
+    createdAt DateTime @default(now()) @map("created_at")
+
+    // Relations
+    user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+    @@index([userId])
+    @@index([leaderboardType])
+    @@index([period])
+    @@index([snapshotAt])
+    @@map("rank_snapshots")
+}
+
+model LeaderboardSnapshot {
+    id              String   @id @default(uuid())
+    leaderboardType String   @map("leaderboard_type") @db.VarChar(50) // GLOBAL, MONTHLY, PROJECT, SKILL
+    period          String?  @db.VarChar(50) // For monthly: "2025-01", for project: project_id
+    topUsers        Json     @map("top_users") // Array of {user_id, rank, points}
+    snapshotAt      DateTime @map("snapshot_at")
+
+    // Timestamps
+    createdAt DateTime @default(now()) @map("created_at")
+
+    @@index([leaderboardType])
+    @@index([period])
+    @@index([snapshotAt])
+    @@map("leaderboard_snapshots")
 }

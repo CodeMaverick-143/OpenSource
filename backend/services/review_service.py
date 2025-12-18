@@ -7,10 +7,10 @@ from typing import List, Optional
 
 import structlog
 from fastapi import HTTPException, status
-from prisma import Prisma
 from prisma.models import PRReview, PullRequest, User
 
 from backend.services.pr_state_machine import PRState, PRStateMachine
+from prisma import Prisma
 
 logger = structlog.get_logger(__name__)
 
@@ -294,9 +294,7 @@ class ReviewService:
 
         return review
 
-    async def get_review_history(
-        self, pr_id: str, requester_id: str
-    ) -> List[PRReview]:
+    async def get_review_history(self, pr_id: str, requester_id: str) -> List[PRReview]:
         """
         Get review history for PR.
 

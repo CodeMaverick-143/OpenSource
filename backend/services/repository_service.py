@@ -7,13 +7,13 @@ from typing import List, Optional, Tuple
 
 import structlog
 from fastapi import HTTPException, status
-from prisma import Prisma
 from prisma.models import Repository, User
 
 from backend.core.config import settings
 from backend.integrations.github.repo_validator import GitHubRepoValidator
 from backend.integrations.github.token_manager import TokenManager
 from backend.integrations.github.webhook_manager import WebhookManager
+from prisma import Prisma
 
 logger = structlog.get_logger(__name__)
 
@@ -229,9 +229,7 @@ class RepositoryService:
                 detail=f"Failed to sync repository: {str(e)}",
             )
 
-    async def disable_repository(
-        self, repository_id: str, reason: str, user: User
-    ) -> Repository:
+    async def disable_repository(self, repository_id: str, reason: str, user: User) -> Repository:
         """
         Disable repository.
 

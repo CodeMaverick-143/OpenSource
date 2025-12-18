@@ -4,7 +4,7 @@ Supports environment-specific configs (development, testing, production).
 """
 
 from functools import lru_cache
-from typing import Any, Literal
+from typing import Any, Literal, Optional
 
 from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -44,8 +44,7 @@ class Settings(BaseSettings):
         if not v:
             field_name = info.field_name
             raise ValueError(
-                f"{field_name} must be set. "
-                "See docs/NEONDB_SETUP.md for setup instructions."
+                f"{field_name} must be set. " "See docs/NEONDB_SETUP.md for setup instructions."
             )
         if not v.startswith("postgresql://"):
             raise ValueError(f"{info.field_name} must be a PostgreSQL connection string")

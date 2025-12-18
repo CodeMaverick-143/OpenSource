@@ -29,15 +29,15 @@ def generate_slug(text: str, max_length: int = 255) -> str:
     slug = text.lower()
 
     # Replace spaces and special characters with hyphens
-    slug = re.sub(r'[^\w\s-]', '', slug)
-    slug = re.sub(r'[-\s]+', '-', slug)
+    slug = re.sub(r"[^\w\s-]", "", slug)
+    slug = re.sub(r"[-\s]+", "-", slug)
 
     # Remove leading/trailing hyphens
-    slug = slug.strip('-')
+    slug = slug.strip("-")
 
     # Truncate to max length
     if len(slug) > max_length:
-        slug = slug[:max_length].rstrip('-')
+        slug = slug[:max_length].rstrip("-")
 
     return slug
 

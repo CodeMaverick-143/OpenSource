@@ -5,6 +5,7 @@ Point ledger with append-only transactions and atomic updates.
 from typing import Optional
 
 import structlog
+
 from prisma import Prisma
 
 logger = structlog.get_logger(__name__)
@@ -99,9 +100,7 @@ class PointLedger:
             Reversal transaction
         """
         # Get original transaction
-        original = await self.db.pointtransaction.find_unique(
-            where={"id": original_transaction_id}
-        )
+        original = await self.db.pointtransaction.find_unique(where={"id": original_transaction_id})
 
         if not original:
             raise ValueError(f"Original transaction {original_transaction_id} not found")
@@ -149,9 +148,7 @@ class PointLedger:
 
         return user.totalPoints
 
-    async def get_transaction_history(
-        self, user_id: str, limit: int = 100
-    ) -> list:
+    async def get_transaction_history(self, user_id: str, limit: int = 100) -> list:
         """
         Get user's transaction history.
 
@@ -182,9 +179,7 @@ class PointLedger:
             True if ledger is consistent
         """
         # Get all transactions
-        transactions = await self.db.pointtransaction.find_many(
-            where={"userId": user_id}
-        )
+        transactions = await self.db.pointtransaction.find_many(where={"userId": user_id})
 
         # Calculate sum
         calculated_total = sum(t.points for t in transactions)

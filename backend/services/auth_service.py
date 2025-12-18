@@ -7,13 +7,13 @@ from datetime import datetime, timedelta
 from typing import Optional
 
 import structlog
-from prisma import Prisma
 from prisma.models import RefreshToken, User
 
 from backend.core.config import settings
 from backend.core.oauth import github_oauth_client
 from backend.core.security import create_access_token, create_refresh_token, hash_token
 from backend.services.user_service import UserService
+from prisma import Prisma
 
 logger = structlog.get_logger(__name__)
 

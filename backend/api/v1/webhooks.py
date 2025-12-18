@@ -3,8 +3,7 @@ GitHub webhook API endpoint.
 """
 
 import structlog
-from fastapi import APIRouter, Depends, HTTPException, Header, Request, status
-from prisma import Prisma
+from fastapi import APIRouter, Depends, Header, HTTPException, Request, status
 
 from backend.db.prisma_client import get_db
 from backend.integrations.github.webhook_processor import WebhookProcessor
@@ -14,6 +13,7 @@ from backend.integrations.github.webhook_security import (
     parse_webhook_event,
     verify_webhook_signature,
 )
+from prisma import Prisma
 
 router = APIRouter(tags=["webhooks"])
 logger = structlog.get_logger(__name__)

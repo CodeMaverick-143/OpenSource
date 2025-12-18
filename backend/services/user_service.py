@@ -7,8 +7,9 @@ from datetime import datetime
 from typing import Optional
 
 import structlog
-from prisma import Prisma
 from prisma.models import User
+
+from prisma import Prisma
 
 logger = structlog.get_logger(__name__)
 
@@ -149,9 +150,7 @@ class UserService:
         Returns:
             Updated user
         """
-        updated_user = await self.db.user.update(
-            where={"id": user.id}, data={"isDeleted": True}
-        )
+        updated_user = await self.db.user.update(where={"id": user.id}, data={"isDeleted": True})
 
         logger.info("user_soft_deleted", user_id=user.id, github_id=user.githubId)
 
@@ -183,9 +182,7 @@ class UserService:
         Returns:
             Updated user
         """
-        updated_user = await self.db.user.update(
-            where={"id": user.id}, data={"isBanned": False}
-        )
+        updated_user = await self.db.user.update(where={"id": user.id}, data={"isBanned": False})
 
         logger.info("user_unbanned", user_id=user.id, github_id=user.githubId)
 

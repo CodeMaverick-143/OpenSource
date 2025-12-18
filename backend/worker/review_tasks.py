@@ -83,9 +83,7 @@ def auto_release_stale_reviews(self, timeout_days: int = 14) -> dict:
     Returns:
         Release result
     """
-    logger.info(
-        "auto_releasing_stale_reviews", timeout_days=timeout_days, task_id=self.request.id
-    )
+    logger.info("auto_releasing_stale_reviews", timeout_days=timeout_days, task_id=self.request.id)
 
     try:
         import asyncio

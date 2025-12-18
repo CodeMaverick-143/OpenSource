@@ -188,7 +188,7 @@ class GitHubRESTClient:
 
                 # Retry on server errors
                 if response.status_code >= 500 and retry_count < self.MAX_RETRIES:
-                    wait_time = self.RETRY_BACKOFF_BASE ** retry_count
+                    wait_time = self.RETRY_BACKOFF_BASE**retry_count
                     logger.warning(
                         "github_api_error_retrying",
                         status_code=response.status_code,
@@ -217,7 +217,7 @@ class GitHubRESTClient:
         except httpx.HTTPError as e:
             # Retry on network errors
             if retry_count < self.MAX_RETRIES:
-                wait_time = self.RETRY_BACKOFF_BASE ** retry_count
+                wait_time = self.RETRY_BACKOFF_BASE**retry_count
                 logger.warning(
                     "github_api_network_error_retrying",
                     error=str(e),
@@ -240,9 +240,7 @@ class GitHubRESTClient:
         """POST request to GitHub API."""
         return await self._request("POST", endpoint, json=json)
 
-    async def patch(
-        self, endpoint: str, json: Optional[dict] = None
-    ) -> tuple[dict, httpx.Headers]:
+    async def patch(self, endpoint: str, json: Optional[dict] = None) -> tuple[dict, httpx.Headers]:
         """PATCH request to GitHub API."""
         return await self._request("PATCH", endpoint, json=json)
 

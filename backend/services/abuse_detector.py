@@ -6,6 +6,7 @@ from datetime import datetime, timedelta
 from typing import Dict, List
 
 import structlog
+
 from prisma import Prisma
 
 logger = structlog.get_logger(__name__)

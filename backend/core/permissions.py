@@ -7,8 +7,9 @@ from typing import Callable
 
 import structlog
 from fastapi import HTTPException, status
-from prisma import Prisma
 from prisma.models import User
+
+from prisma import Prisma
 
 logger = structlog.get_logger(__name__)
 

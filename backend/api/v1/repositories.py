@@ -4,7 +4,6 @@ Repository management API endpoints.
 
 import structlog
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from prisma import Prisma
 from prisma.models import User
 
 from backend.core.dependencies import get_current_active_user
@@ -17,6 +16,7 @@ from backend.schemas.repository import (
     RepositorySync,
 )
 from backend.services.repository_service import RepositoryService
+from prisma import Prisma
 
 router = APIRouter(tags=["repositories"])
 logger = structlog.get_logger(__name__)
@@ -43,9 +43,7 @@ async def register_repository(
         )
 
     service = RepositoryService(db)
-    repository = await service.register_repository(
-        project.id, data.github_repo_url, current_user
-    )
+    repository = await service.register_repository(project.id, data.github_repo_url, current_user)
 
     return RepositoryResponse.model_validate(repository)
 
@@ -62,9 +60,7 @@ async def list_repositories(
     if project_slug:
         project = await db.project.find_unique(where={"slug": project_slug})
         if not project:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="Project not found"
-            )
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Project not found")
         project_id = project.id
 
     service = RepositoryService(db)
@@ -83,9 +79,7 @@ async def get_repository(repository_id: str, db: Prisma = Depends(get_db)) -> Re
     repository = await service.get_repository(repository_id)
 
     if not repository:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Repository not found"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Repository not found")
 
     return RepositoryResponse.model_validate(repository)
 
@@ -119,9 +113,7 @@ async def disable_repository(
     )
 
     if not repository:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Repository not found"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Repository not found")
 
     # Check permission
     is_maintainer = await check_project_maintainer(db, repository.project.slug, current_user)
@@ -150,9 +142,7 @@ async def enable_repository(
     )
 
     if not repository:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Repository not found"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Repository not found")
 
     # Check permission
     is_maintainer = await check_project_maintainer(db, repository.project.slug, current_user)

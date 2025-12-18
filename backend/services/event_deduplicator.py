@@ -6,6 +6,7 @@ import hashlib
 from typing import Optional
 
 import structlog
+
 from prisma import Prisma
 
 logger = structlog.get_logger(__name__)

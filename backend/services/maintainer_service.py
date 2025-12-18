@@ -6,8 +6,9 @@ from typing import List
 
 import structlog
 from fastapi import HTTPException, status
-from prisma import Prisma
 from prisma.models import ProjectMaintainer, User
+
+from prisma import Prisma
 
 logger = structlog.get_logger(__name__)
 
@@ -81,9 +82,7 @@ class MaintainerService:
 
         return maintainer
 
-    async def remove_maintainer(
-        self, project_id: str, user_id: str, requesting_user: User
-    ) -> None:
+    async def remove_maintainer(self, project_id: str, user_id: str, requesting_user: User) -> None:
         """
         Remove maintainer from project.
 

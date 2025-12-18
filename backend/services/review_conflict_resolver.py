@@ -5,8 +5,9 @@ Review conflict resolver for handling multiple maintainer reviews.
 from typing import List, Optional
 
 import structlog
-from prisma import Prisma
 from prisma.models import PRReview
+
+from prisma import Prisma
 
 logger = structlog.get_logger(__name__)
 
@@ -97,15 +98,11 @@ class ReviewConflictResolver:
 
             if pr and pr.repository.project.ownerId == resolver_id:
                 # Find owner's review
-                owner_review = next(
-                    (r for r in reviews if r.reviewerId == resolver_id), None
-                )
+                owner_review = next((r for r in reviews if r.reviewerId == resolver_id), None)
 
                 if owner_review:
                     final_outcome = (
-                        "APPROVED"
-                        if owner_review.action == "APPROVED"
-                        else "CHANGES_REQUESTED"
+                        "APPROVED" if owner_review.action == "APPROVED" else "CHANGES_REQUESTED"
                     )
 
         # Create conflict record
@@ -123,9 +120,7 @@ class ReviewConflictResolver:
 
         # Mark conflicting reviews
         for review in reviews:
-            await self.db.prreview.update(
-                where={"id": review.id}, data={"isConflicting": True}
-            )
+            await self.db.prreview.update(where={"id": review.id}, data={"isConflicting": True})
 
         logger.info(
             "conflict_resolved",

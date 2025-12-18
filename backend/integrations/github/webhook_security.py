@@ -2,8 +2,8 @@
 GitHub webhook signature verification and payload validation.
 """
 
-import hmac
 import hashlib
+import hmac
 from typing import Optional
 
 import structlog

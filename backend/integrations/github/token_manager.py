@@ -6,10 +6,10 @@ from datetime import datetime, timedelta
 from typing import Optional
 
 import structlog
-from prisma import Prisma
 from prisma.models import GitHubToken, User
 
 from backend.integrations.github.rest_client import GitHubRESTClient
+from prisma import Prisma
 
 logger = structlog.get_logger(__name__)
 

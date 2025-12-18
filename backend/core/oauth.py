@@ -87,9 +87,7 @@ class GitHubOAuthClient:
                         error=result.get("error"),
                         error_description=result.get("error_description"),
                     )
-                    raise ContriVerseException(
-                        "Failed to exchange code for token", status_code=400
-                    )
+                    raise ContriVerseException("Failed to exchange code for token", status_code=400)
 
                 access_token = result.get("access_token")
                 if not access_token:
@@ -124,9 +122,7 @@ class GitHubOAuthClient:
         try:
             async with httpx.AsyncClient() as client:
                 # Fetch user profile
-                user_response = await client.get(
-                    self.USER_API_URL, headers=headers, timeout=10.0
-                )
+                user_response = await client.get(self.USER_API_URL, headers=headers, timeout=10.0)
                 user_response.raise_for_status()
                 user_data = user_response.json()
 
