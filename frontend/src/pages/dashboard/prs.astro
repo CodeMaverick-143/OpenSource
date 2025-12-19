@@ -1,0 +1,81 @@
+---
+import AppLayout from "../../components/layout/AppLayout.astro";
+import { getPRs } from "../../lib/api";
+import PRList from "../../components/dashboard/PRList.astro";
+import FilterControls from "../../components/islands/FilterControls";
+import PaginationControls from "../../components/islands/PaginationControls";
+import ErrorMessage from "../../components/ui/ErrorMessage.astro";
+
+// Parse query parameters
+const url = new URL(Astro.request.url);
+const status = url.searchParams.get("status") || undefined;
+const projectId = url.searchParams.get("project_id") || undefined;
+const repositoryId = url.searchParams.get("repository_id") || undefined;
+const sortBy =
+    (url.searchParams.get("sort_by") as "recent" | "score" | "oldest") ||
+    "recent";
+const page = parseInt(url.searchParams.get("page") || "1");
+const limit = 20;
+
+let prResponse = null;
+let error = null;
+
+try {
+    prResponse = await getPRs({
+        status,
+        project_id: projectId,
+        repository_id: repositoryId,
+        sort_by: sortBy,
+        page,
+        limit,
+    });
+} catch (e) {
+    error = e instanceof Error ? e.message : "Failed to load PRs";
+}
+---
+
+<AppLayout title="My Pull Requests - ContriVerse">
+    <div class="min-h-screen bg-gray-50">
+        <div class="container-dashboard py-8">
+            <div class="mb-6">
+                <h1 class="text-3xl font-bold text-gray-900">
+                    My Pull Requests
+                </h1>
+                <p class="text-gray-600 mt-2">
+                    View and manage all your contributions
+                </p>
+            </div>
+
+            <FilterControls
+                client:load
+                initialStatus={status}
+                initialProjectId={projectId}
+                initialRepositoryId={repositoryId}
+                initialSortBy={sortBy}
+            />
+
+            {
+                error ? (
+                    <ErrorMessage
+                        title="Error Loading PRs"
+                        description={error}
+                    />
+                ) : prResponse ? (
+                    <>
+                        <PRList response={prResponse} />
+
+                        {prResponse.total > 0 && (
+                            <PaginationControls
+                                client:load
+                                currentPage={prResponse.page}
+                                totalPages={prResponse.total_pages}
+                                total={prResponse.total}
+                                limit={prResponse.limit}
+                            />
+                        )}
+                    </>
+                ) : null
+            }
+        </div>
+    </div>
+</AppLayout>

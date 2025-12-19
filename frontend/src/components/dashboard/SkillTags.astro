@@ -1,0 +1,44 @@
+---
+import type { SkillsResponse } from "../../lib/types";
+import Card from "../ui/Card.astro";
+
+interface Props {
+    skills: SkillsResponse;
+}
+
+const { skills } = Astro.props;
+
+// Calculate font sizes based on weight (normalize to 0.5-2.0 range)
+const maxWeight = Math.max(...skills.skills.map((s) => s.weight), 1);
+const getSize = (weight: number) => {
+    const normalized = (weight / maxWeight) * 1.5 + 0.5;
+    return `${normalized}rem`;
+};
+---
+
+<Card>
+    <h3 class="text-lg font-semibold text-gray-900 mb-4">Your Skills</h3>
+    {
+        skills.skills.length === 0 ? (
+            <div class="text-center py-6 text-gray-600">
+                <div class="text-4xl mb-2">🏷️</div>
+                <p>
+                    No skills detected yet. Contribute to projects to build your
+                    skill profile!
+                </p>
+            </div>
+        ) : (
+            <div class="flex flex-wrap gap-3 items-center justify-center">
+                {skills.skills.map((skill) => (
+                    <span
+                        class="inline-block px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-full font-semibold shadow-md hover:shadow-lg transition-shadow cursor-default"
+                        style={`font-size: ${getSize(skill.weight)}`}
+                        title={`${skill.contribution_count} contributions • Weight: ${skill.weight.toFixed(2)}`}
+                    >
+                        {skill.name}
+                    </span>
+                ))}
+            </div>
+        )
+    }
+</Card>

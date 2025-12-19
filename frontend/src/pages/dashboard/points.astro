@@ -1,0 +1,57 @@
+---
+import AppLayout from "../../components/layout/AppLayout.astro";
+import { getPointsHistory } from "../../lib/api";
+import PointsHistory from "../../components/dashboard/PointsHistory.astro";
+import PaginationControls from "../../components/islands/PaginationControls";
+import ErrorMessage from "../../components/ui/ErrorMessage.astro";
+
+// Parse query parameters
+const url = new URL(Astro.request.url);
+const page = parseInt(url.searchParams.get("page") || "1");
+const limit = 20;
+
+let pointsResponse = null;
+let error = null;
+
+try {
+    pointsResponse = await getPointsHistory(page, limit);
+} catch (e) {
+    error = e instanceof Error ? e.message : "Failed to load points history";
+}
+---
+
+<AppLayout title="Points History - ContriVerse">
+    <div class="min-h-screen bg-gray-50">
+        <div class="container-dashboard py-8">
+            <div class="mb-6">
+                <h1 class="text-3xl font-bold text-gray-900">Points History</h1>
+                <p class="text-gray-600 mt-2">
+                    View your complete point transaction ledger
+                </p>
+            </div>
+
+            {
+                error ? (
+                    <ErrorMessage
+                        title="Error Loading Points History"
+                        description={error}
+                    />
+                ) : pointsResponse ? (
+                    <>
+                        <PointsHistory response={pointsResponse} />
+
+                        {pointsResponse.total > 0 && (
+                            <PaginationControls
+                                client:load
+                                currentPage={pointsResponse.page}
+                                totalPages={pointsResponse.total_pages}
+                                total={pointsResponse.total}
+                                limit={pointsResponse.limit}
+                            />
+                        )}
+                    </>
+                ) : null
+            }
+        </div>
+    </div>
+</AppLayout>

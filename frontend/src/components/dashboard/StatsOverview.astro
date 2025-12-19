@@ -1,0 +1,82 @@
+---
+import type { DashboardStats } from "../../lib/types";
+import Card from "../ui/Card.astro";
+import { formatNumber } from "../../lib/utils";
+
+interface Props {
+    stats: DashboardStats;
+}
+
+const { stats } = Astro.props;
+
+const statCards = [
+    {
+        label: "Total PRs",
+        value: stats.total_prs,
+        icon: "📝",
+        color: "text-blue-600",
+    },
+    {
+        label: "Merged PRs",
+        value: stats.merged_prs,
+        icon: "✅",
+        color: "text-green-600",
+    },
+    {
+        label: "Open PRs",
+        value: stats.open_prs,
+        icon: "🔓",
+        color: "text-yellow-600",
+    },
+    {
+        label: "Under Review",
+        value: stats.under_review_prs,
+        icon: "👀",
+        color: "text-purple-600",
+    },
+    {
+        label: "Total Points",
+        value: stats.total_points,
+        icon: "⭐",
+        color: "text-orange-600",
+    },
+    {
+        label: "Active Projects",
+        value: stats.active_projects,
+        icon: "🚀",
+        color: "text-indigo-600",
+    },
+    {
+        label: "Badges Earned",
+        value: stats.badges_earned,
+        icon: "🏆",
+        color: "text-pink-600",
+    },
+    {
+        label: "Current Rank",
+        value: stats.current_rank || "N/A",
+        icon: "📊",
+        color: "text-teal-600",
+    },
+];
+---
+
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    {
+        statCards.map((stat) => (
+            <Card class="card-hover">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-gray-600 mb-1">{stat.label}</p>
+                        <p class={`text-2xl font-bold ${stat.color}`}>
+                            {typeof stat.value === "number"
+                                ? formatNumber(stat.value)
+                                : stat.value}
+                        </p>
+                    </div>
+                    <div class="text-4xl">{stat.icon}</div>
+                </div>
+            </Card>
+        ))
+    }
+</div>

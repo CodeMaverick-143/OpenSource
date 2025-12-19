@@ -1,0 +1,62 @@
+---
+import type { PRItem } from '../../lib/types';
+import Badge from '../ui/Badge.astro';
+import { formatDate, getStatusColor, formatStatus } from '../../lib/utils';
+
+interface Props {
+  pr: PRItem;
+}
+
+const { pr } = Astro.props;
+
+const statusColorClass = getStatusColor(pr.status);
+const isArchived = pr.project_is_active === false || pr.repository_is_active === false;
+---
+
+<div class={`bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow ${isArchived ? 'opacity-60' : ''}`}>
+  <div class="flex items-start justify-between mb-2">
+    <div class="flex-1">
+      <a 
+        href={pr.github_url} 
+        target="_blank" 
+        rel="noopener noreferrer"
+        class="text-lg font-semibold text-gray-900 hover:text-blue-600 transition-colors"
+      >
+        {pr.title}
+      </a>
+      <div class="flex items-center gap-2 mt-1 text-sm text-gray-600">
+        {pr.project_name && (
+          <span class="flex items-center gap-1">
+            <span class="font-medium">{pr.project_name}</span>
+            {isArchived && <span class="text-xs text-red-600">(Archived)</span>}
+          </span>
+        )}
+        {pr.repository_name && (
+          <span class="text-gray-400">•</span>
+          <span>{pr.repository_name}</span>
+        )}
+        <span class="text-gray-400">•</span>
+        <span>#{pr.pr_number}</span>
+      </div>
+    </div>
+    <Badge class={statusColorClass}>
+      {formatStatus(pr.status)}
+    </Badge>
+  </div>
+  
+  <div class="flex items-center justify-between text-sm text-gray-600">
+    <div class="flex items-center gap-4">
+      <span>Last activity: {formatDate(pr.last_activity)}</span>
+      {pr.merged_at && (
+        <>
+          <span class="text-gray-400">•</span>
+          <span>Merged: {formatDate(pr.merged_at)}</span>
+        </>
+      )}
+    </div>
+    <div class="flex items-center gap-1 font-semibold text-orange-600">
+      <span>⭐</span>
+      <span>{pr.score > 0 ? `${pr.score} pts` : 'Pending'}</span>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,57 @@
+---
+/**
+ * Simple badge display component for BadgeResponse (dashboard API).
+ * For full Badge display with rarity/category, use BadgeCard.astro.
+ */
+import type { BadgeResponse } from "../../lib/types";
+import {
+    getBadgeIcon,
+    formatBadgeCriteria,
+    formatEarnedDate,
+} from "../../lib/badgeUtils";
+import Card from "../ui/Card.astro";
+
+interface Props {
+    badge: BadgeResponse;
+    earned?: boolean;
+}
+
+const { badge, earned = false } = Astro.props;
+const icon = getBadgeIcon(badge);
+---
+
+<Card
+    class={`transition-all duration-300 ${earned ? "hover:scale-105" : "opacity-60 grayscale hover:opacity-80"}`}
+>
+    <div class="text-center">
+        <!-- Icon -->
+        <div class={`text-5xl mb-3 ${earned ? "" : "grayscale"}`}>
+            {icon}
+        </div>
+
+        <!-- Name -->
+        <h4 class="font-semibold text-gray-900 mb-1">
+            {badge.name}
+        </h4>
+
+        <!-- Description -->
+        <p class="text-sm text-gray-600 mb-2">
+            {badge.description}
+        </p>
+
+        <!-- Earned date or criteria -->
+        {
+            earned && badge.earned_at ? (
+                <p class="text-xs text-gray-500 mt-3 pt-3 border-t border-gray-200">
+                    Earned {formatEarnedDate(badge.earned_at)}
+                </p>
+            ) : (
+                badge.criteria && (
+                    <p class="text-xs text-gray-500 mt-3 pt-3 border-t border-gray-200">
+                        {formatBadgeCriteria(badge.criteria)}
+                    </p>
+                )
+            )
+        }
+    </div>
+</Card>

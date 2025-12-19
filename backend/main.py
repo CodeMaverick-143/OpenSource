@@ -5,9 +5,13 @@ FastAPI application entry point.
 import structlog
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+from slowapi.middleware import SlowAPIMiddleware
 
 from backend.api.v1 import api_router
 from backend.core.config import settings
+from backend.core.rate_limit import limiter
 from backend.core.exceptions import (
     ContriVerseException,
     contriverse_exception_handler,
@@ -46,7 +50,9 @@ app.add_middleware(RequestIDMiddleware)
 app.add_exception_handler(ContriVerseException, contriverse_exception_handler)
 app.add_exception_handler(HTTPException, http_exception_handler)
 app.add_exception_handler(Exception, unhandled_exception_handler)
-
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+app.add_middleware(SlowAPIMiddleware)
 # Include API routers
 app.include_router(api_router, prefix=settings.API_V1_PREFIX)
 

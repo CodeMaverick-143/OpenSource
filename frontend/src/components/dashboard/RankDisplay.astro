@@ -1,0 +1,82 @@
+---
+import type { RankInfo } from '../../lib/types';
+import Card from '../ui/Card.astro';
+import { formatDate, getRankDelta, formatNumber } from '../../lib/utils';
+
+interface Props {
+  rankInfo: RankInfo | null;
+}
+
+const { rankInfo } = Astro.props;
+---
+
+{!rankInfo ? (
+  <Card>
+    <div class="text-center py-8">
+      <div class="text-6xl mb-4">📊</div>
+      <h3 class="text-lg font-semibold text-gray-900 mb-2">Rank Not Yet Assigned</h3>
+      <p class="text-gray-600">Your rank will be calculated once you earn points from merged PRs.</p>
+    </div>
+  </Card>
+) : (
+
+<Card>
+    {(() => {
+        const delta = getRankDelta(rankInfo.rank, rankInfo.previous_rank);
+        return (
+    <div class="space-y-6">
+        <!-- Current Rank -->
+        <div class="text-center">
+            <p class="text-sm text-gray-600 mb-2">Your Current Rank</p>
+            <div class="flex items-center justify-center gap-3">
+                <span class="text-5xl font-bold text-blue-600"
+                    >#{formatNumber(rankInfo.rank)}</span
+                >
+                <div
+                    class={`flex items-center gap-1 text-lg font-semibold ${delta.colorClass}`}
+                >
+                    <span>{delta.symbol}</span>
+                    <span class="text-sm">{delta.text}</span>
+                </div>
+            </div>
+            <p class="text-sm text-gray-500 mt-2">
+                Top {rankInfo.percentile.toFixed(1)}% • {
+                    rankInfo.leaderboard_type
+                } Leaderboard
+            </p>
+        </div>
+
+        <!-- Progress to Next Rank -->
+        <div>
+            <div class="flex items-center justify-between text-sm mb-2">
+                <span class="text-gray-600">Progress to Next Rank</span>
+                <span class="font-semibold text-gray-900"
+                    >{rankInfo.progress_percentage.toFixed(0)}%</span
+                >
+            </div>
+            <div class="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+                <div
+                    class="bg-gradient-to-r from-blue-500 to-purple-600 h-full rounded-full transition-all duration-500"
+                    style={`width: ${rankInfo.progress_percentage}%`}
+                >
+                </div>
+            </div>
+            <div
+                class="flex items-center justify-between text-xs text-gray-500 mt-1"
+            >
+                <span>{formatNumber(rankInfo.total_points)} points</span>
+                <span
+                    >{formatNumber(rankInfo.next_rank_points)} points needed</span
+                >
+            </div>
+        </div>
+
+        <!-- Last Updated -->
+        <div class="text-center text-xs text-gray-500 pt-4 border-t">
+            Last updated: {formatDate(rankInfo.last_updated)}
+        </div>
+    </div>
+        );
+    })()}
+  </Card>
+)}

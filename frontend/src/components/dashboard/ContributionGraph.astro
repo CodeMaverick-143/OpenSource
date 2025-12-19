@@ -1,0 +1,89 @@
+---
+import type { ContributionGraphResponse } from "../../lib/types";
+import Card from "../ui/Card.astro";
+import { getContributionColor, formatNumber } from "../../lib/utils";
+
+interface Props {
+    graph: ContributionGraphResponse;
+}
+
+const { graph } = Astro.props;
+
+// Group contributions by week for better visualization
+const weeks: Array<Array<(typeof graph.data)[0]>> = [];
+let currentWeek: typeof graph.data = [];
+
+graph.data.forEach((day, index) => {
+    currentWeek.push(day);
+    if ((index + 1) % 7 === 0 || index === graph.data.length - 1) {
+        weeks.push([...currentWeek]);
+        currentWeek = [];
+    }
+});
+---
+
+<Card>
+    <div class="space-y-6">
+        <!-- Contribution Heatmap -->
+        <div>
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">
+                Contribution Activity
+            </h3>
+            <div class="overflow-x-auto">
+                <div class="inline-flex gap-1">
+                    {
+                        weeks.map((week) => (
+                            <div class="flex flex-col gap-1">
+                                {week.map((day) => (
+                                    <div
+                                        class={`w-3 h-3 rounded-sm ${getContributionColor(day.count)} hover:ring-2 hover:ring-blue-500 transition-all cursor-pointer`}
+                                        title={`${day.date}: ${day.count} contribution${day.count !== 1 ? "s" : ""}`}
+                                    />
+                                ))}
+                            </div>
+                        ))
+                    }
+                </div>
+            </div>
+            <div class="flex items-center gap-2 mt-3 text-xs text-gray-600">
+                <span>Less</span>
+                <div class="flex gap-1">
+                    <div class="w-3 h-3 rounded-sm bg-gray-100"></div>
+                    <div class="w-3 h-3 rounded-sm bg-green-200"></div>
+                    <div class="w-3 h-3 rounded-sm bg-green-400"></div>
+                    <div class="w-3 h-3 rounded-sm bg-green-600"></div>
+                    <div class="w-3 h-3 rounded-sm bg-green-800"></div>
+                </div>
+                <span>More</span>
+            </div>
+        </div>
+
+        <!-- Stats -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-4 border-t">
+            <div class="text-center">
+                <p class="text-2xl font-bold text-blue-600">
+                    {formatNumber(graph.stats.total_contributions)}
+                </p>
+                <p class="text-sm text-gray-600">Total</p>
+            </div>
+            <div class="text-center">
+                <p class="text-2xl font-bold text-green-600">
+                    {graph.stats.current_streak}
+                </p>
+                <p class="text-sm text-gray-600">Current Streak</p>
+            </div>
+            <div class="text-center">
+                <p class="text-2xl font-bold text-purple-600">
+                    {graph.stats.longest_streak}
+                </p>
+                <p class="text-sm text-gray-600">Longest Streak</p>
+            </div>
+            <div class="text-center">
+                <p class="text-2xl font-bold text-orange-600">
+                    {graph.stats.best_day ? graph.stats.best_day.count || 0 : 0}
+                </p>
+                <p class="text-sm text-gray-600">Best Day</p>
+            </div>
+        </div>
+    </div>
+</Card>

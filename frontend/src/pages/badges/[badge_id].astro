@@ -1,0 +1,177 @@
+---
+/**
+ * Badge detail page - shows badge information and progress.
+ */
+import Layout from "../../components/layout/AppLayout.astro";
+import BadgeCard from "../../components/badges/BadgeCard.astro";
+import BadgeProgress from "../../components/badges/BadgeProgress.astro";
+import { getBadge, getBadgeProgress } from "../../lib/api";
+import { getBadgeCategoryName } from "../../lib/badgeUtils";
+
+const { badge_id } = Astro.params;
+
+if (!badge_id) {
+    return Astro.redirect("/badges");
+}
+
+let badge = null;
+let awardCount = 0;
+let progress = null;
+let error = null;
+
+try {
+    const badgeResponse = await getBadge(badge_id);
+    badge = badgeResponse.badge;
+    awardCount = badgeResponse.award_count;
+
+    // Try to get progress (requires auth)
+    try {
+        progress = await getBadgeProgress(badge_id);
+    } catch {
+        // User not authenticated or other error - ignore
+    }
+} catch (e) {
+    error = e instanceof Error ? e.message : "Failed to load badge";
+}
+
+if (error || !badge) {
+    return Astro.redirect("/badges");
+}
+
+// Parse criteria for display
+const criteria = badge.criteria;
+let criteriaDescription = "";
+
+if (criteria.type === "pr_count") {
+    criteriaDescription = `Merge ${criteria.threshold} pull requests`;
+} else if (criteria.type === "quality_rating") {
+    criteriaDescription = `Maintain an average rating of ${criteria.min_rating}+ across ${criteria.min_prs}+ merged PRs`;
+} else if (criteria.type === "streak") {
+    criteriaDescription = `Contribute for ${criteria.months} consecutive months`;
+} else if (criteria.type === "project_champion") {
+    criteriaDescription = `Contribute at least ${(criteria.min_percentage * 100).toFixed(0)}% of a project's PRs`;
+} else if (criteria.type === "first_pr") {
+    criteriaDescription = "Merge your first pull request";
+}
+---
+
+<Layout title={`${badge.name} - Badge`}>
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Back button -->
+        <div class="mb-6">
+            <a
+                href="/badges"
+                class="inline-flex items-center text-sm text-gray-600 hover:text-gray-900"
+            >
+                <svg
+                    class="w-4 h-4 mr-1"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                >
+                    <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M15 19l-7-7 7-7"></path>
+                </svg>
+                Back to Badges
+            </a>
+        </div>
+
+        <div class="grid md:grid-cols-2 gap-8">
+            <!-- Badge display -->
+            <div>
+                <BadgeCard
+                    badge={badge}
+                    earned={progress?.earned || false}
+                    size="lg"
+                />
+
+                <!-- Stats -->
+                <div
+                    class="mt-6 bg-white rounded-lg border border-gray-200 p-4"
+                >
+                    <h3 class="text-sm font-semibold text-gray-700 mb-3">
+                        Badge Stats
+                    </h3>
+                    <div class="space-y-2 text-sm">
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Category:</span>
+                            <span class="font-medium"
+                                >{getBadgeCategoryName(badge.category)}</span
+                            >
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Times Awarded:</span>
+                            <span class="font-medium">{awardCount}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Version:</span>
+                            <span class="font-medium">v{badge.version}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Badge information -->
+            <div class="space-y-6">
+                <!-- Description -->
+                <div>
+                    <h2 class="text-2xl font-bold text-gray-900 mb-2">
+                        {badge.name}
+                    </h2>
+                    <p class="text-gray-600">
+                        {badge.description}
+                    </p>
+                </div>
+
+                <!-- How to earn -->
+                <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <h3 class="text-sm font-semibold text-blue-900 mb-2">
+                        How to Earn
+                    </h3>
+                    <p class="text-sm text-blue-800">
+                        {criteriaDescription}
+                    </p>
+                </div>
+
+                <!-- Progress (if authenticated) -->
+                {
+                    progress && (
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-900 mb-3">
+                                Your Progress
+                            </h3>
+                            <BadgeProgress
+                                progress={progress}
+                                badgeName={badge.name}
+                            />
+                        </div>
+                    )
+                }
+
+                <!-- Call to action -->
+                {
+                    !progress?.earned && (
+                        <div class="bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg p-6 text-white">
+                            <h3 class="text-lg font-bold mb-2">
+                                Ready to earn this badge?
+                            </h3>
+                            <p class="text-sm mb-4 opacity-90">
+                                Start contributing to projects and track your
+                                progress!
+                            </p>
+                            <a
+                                href="/dashboard"
+                                class="inline-block px-4 py-2 bg-white text-blue-600 font-semibold rounded-md hover:bg-blue-50 transition-colors"
+                            >
+                                Go to Dashboard
+                            </a>
+                        </div>
+                    )
+                }
+            </div>
+        </div>
+    </div>
+</Layout>

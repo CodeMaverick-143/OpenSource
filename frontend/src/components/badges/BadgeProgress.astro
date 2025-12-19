@@ -1,0 +1,112 @@
+---
+/**
+ * Badge progress bar component.
+ * Shows progress towards earning a badge.
+ */
+import type { BadgeProgress } from "../../lib/types";
+
+interface Props {
+    progress: BadgeProgress;
+    badgeName: string;
+}
+
+const { progress, badgeName } = Astro.props;
+
+// If already earned
+if (progress.earned) {
+    return (
+        <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+            <div class="flex items-center gap-2 text-green-700">
+                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                    <path
+                        fill-rule="evenodd"
+                        d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                        clip-rule="evenodd"
+                    />
+                </svg>
+                <span class="font-semibold">You've earned this badge!</span>
+            </div>
+        </div>
+    );
+}
+
+// If no progress data available
+if (!progress.progress) {
+    return (
+        <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
+            <p class="text-gray-600 text-sm">
+                Progress tracking not available for this badge.
+            </p>
+        </div>
+    );
+}
+
+const { current, required, percentage } = progress.progress;
+---
+
+<div class="bg-white border border-gray-200 rounded-lg p-4 space-y-3">
+    <!-- Progress header -->
+    <div class="flex justify-between items-center">
+        <span class="text-sm font-medium text-gray-700">Progress</span>
+        <span class="text-sm font-semibold text-blue-600"
+            >{percentage.toFixed(0)}%</span
+        >
+    </div>
+
+    <!-- Progress bar -->
+    <div class="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+        <div
+            class="bg-gradient-to-r from-blue-500 to-blue-600 h-full rounded-full transition-all duration-500"
+            style={`width: ${Math.min(percentage, 100)}%`}
+        >
+        </div>
+    </div>
+
+    <!-- Progress details -->
+    <div class="text-sm text-gray-600">
+        {
+            progress.progress.current_prs !== undefined ? (
+                <p>
+                    <span class="font-semibold">
+                        {progress.progress.current_prs}
+                    </span>{" "}
+                    / {progress.progress.required_prs} PRs merged
+                </p>
+            ) : progress.progress.current_rating !== undefined ? (
+                <div class="space-y-1">
+                    <p>
+                        <span class="font-semibold">{current}</span> /{" "}
+                        {required} PRs
+                    </p>
+                    <p>
+                        Average rating:{" "}
+                        <span class="font-semibold">
+                            {progress.progress.current_rating}
+                        </span>{" "}
+                        / {progress.progress.required_rating}
+                    </p>
+                </div>
+            ) : progress.progress.current_months !== undefined ? (
+                <p>
+                    <span class="font-semibold">
+                        {progress.progress.current_months}
+                    </span>{" "}
+                    / {progress.progress.required_months} consecutive months
+                </p>
+            ) : (
+                <p>
+                    <span class="font-semibold">{current}</span> / {required}
+                </p>
+            )
+        }
+    </div>
+
+    <!-- Encouragement message -->
+    {
+        percentage >= 75 && percentage < 100 && (
+            <div class="text-xs text-blue-600 font-medium">
+                🎯 Almost there! Keep going!
+            </div>
+        )
+    }
+</div>

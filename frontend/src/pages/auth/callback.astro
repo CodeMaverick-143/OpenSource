@@ -1,0 +1,18 @@
+---
+import type { APIContext } from "astro";
+
+// This page handles the OAuth callback from GitHub
+// The backend will set the access_token cookie and redirect here
+
+const token = Astro.cookies.get("access_token")?.value;
+
+if (!token) {
+    // No token found, redirect back to login with error
+    return Astro.redirect(
+        "/auth/login?error=authentication_failed&error_description=Failed to authenticate with GitHub",
+    );
+}
+
+// Successfully authenticated, redirect to dashboard
+return Astro.redirect("/dashboard");
+---

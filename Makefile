@@ -11,6 +11,13 @@ help:
 	@echo "  make docker-up    - Start all services with Docker Compose"
 	@echo "  make docker-down  - Stop all Docker services"
 	@echo "  make clean        - Remove cache and build artifacts"
+	@echo "  make seed         - Seed the database with demo data"
+
+seed: ## Seed the database with demo data
+	cd backend && /Library/Frameworks/Python.framework/Versions/3.13/bin/python3 -m seeds.seed
+
+seed-clean: ## Reset demo data (Placeholder)
+	@echo "Not implemented yet - manually delete with 'DELETE FROM users WHERE is_demo=true;'"
 
 install:
 	pip install -r requirements.txt

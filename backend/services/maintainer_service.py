@@ -188,3 +188,44 @@ class MaintainerService:
             return maintainer.role
 
         return "none"
+
+    async def get_maintainer_projects(self, user_id: str) -> List[str]:
+        """
+        Get list of project IDs where user is maintainer or owner.
+
+        Args:
+            user_id: User ID
+
+        Returns:
+            List of project IDs
+        """
+        # Get projects where user is owner
+        owned_projects = await self.db.project.find_many(
+            where={"ownerId": user_id}, select={"id": True}
+        )
+
+        # Get projects where user is maintainer
+        maintainer_records = await self.db.projectmaintainer.find_many(
+            where={"userId": user_id}, select={"projectId": True}
+        )
+
+        # Combine and deduplicate
+        project_ids = {p.id for p in owned_projects}
+        project_ids.update(m.projectId for m in maintainer_records)
+
+        return list(project_ids)
+
+    async def is_project_owner(self, project_id: str, user_id: str) -> bool:
+        """
+        Check if user is project owner.
+
+        Args:
+            project_id: Project ID
+            user_id: User ID
+
+        Returns:
+            True if user is project owner
+        """
+        project = await self.db.project.find_unique(where={"id": project_id})
+        return project is not None and project.ownerId == user_id
+

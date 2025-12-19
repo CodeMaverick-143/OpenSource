@@ -1,0 +1,161 @@
+---
+import AppLayout from "../../components/layout/AppLayout.astro";
+import { getDashboardStats } from "../../lib/api";
+import StatsOverview from "../../components/dashboard/StatsOverview.astro";
+import ErrorMessage from "../../components/ui/ErrorMessage.astro";
+
+let stats = null;
+let error = null;
+
+try {
+    stats = await getDashboardStats();
+} catch (e) {
+    error = e instanceof Error ? e.message : "Failed to load dashboard";
+}
+---
+
+<AppLayout title="Dashboard - ContriVerse">
+    <div class="min-h-screen bg-gray-50">
+        <div class="container-dashboard py-8">
+            <div class="mb-8">
+                <h1 class="text-3xl font-bold text-gray-900">
+                    Contributor Dashboard
+                </h1>
+                <p class="text-gray-600 mt-2">
+                    Track your contributions, points, and progress
+                </p>
+            </div>
+
+            {
+                error ? (
+                    <ErrorMessage
+                        title="Error Loading Dashboard"
+                        description={error}
+                    />
+                ) : stats ? (
+                    <div class="space-y-8">
+                        <StatsOverview stats={stats} />
+
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            <a
+                                href="/dashboard/prs"
+                                class="block bg-white border-2 border-gray-200 rounded-lg p-6 hover:border-blue-500 transition-colors"
+                            >
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <h3 class="text-lg font-semibold text-gray-900">
+                                            My Pull Requests
+                                        </h3>
+                                        <p class="text-gray-600 mt-1">
+                                            View and manage your PRs
+                                        </p>
+                                    </div>
+                                    <svg
+                                        class="w-6 h-6 text-gray-400"
+                                        fill="none"
+                                        viewBox="0 0 24 24"
+                                        stroke="currentColor"
+                                    >
+                                        <path
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                            stroke-width="2"
+                                            d="M9 5l7 7-7 7"
+                                        />
+                                    </svg>
+                                </div>
+                            </a>
+
+                            <a
+                                href="/dashboard/points"
+                                class="block bg-white border-2 border-gray-200 rounded-lg p-6 hover:border-blue-500 transition-colors"
+                            >
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <h3 class="text-lg font-semibold text-gray-900">
+                                            Points History
+                                        </h3>
+                                        <p class="text-gray-600 mt-1">
+                                            View your point transactions
+                                        </p>
+                                    </div>
+                                    <svg
+                                        class="w-6 h-6 text-gray-400"
+                                        fill="none"
+                                        viewBox="0 0 24 24"
+                                        stroke="currentColor"
+                                    >
+                                        <path
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                            stroke-width="2"
+                                            d="M9 5l7 7-7 7"
+                                        />
+                                    </svg>
+                                </div>
+                            </a>
+
+                            <a
+                                href="/dashboard/rank"
+                                class="block bg-white border-2 border-gray-200 rounded-lg p-6 hover:border-blue-500 transition-colors"
+                            >
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <h3 class="text-lg font-semibold text-gray-900">
+                                            Rank & Progress
+                                        </h3>
+                                        <p class="text-gray-600 mt-1">
+                                            Check your leaderboard rank
+                                        </p>
+                                    </div>
+                                    <svg
+                                        class="w-6 h-6 text-gray-400"
+                                        fill="none"
+                                        viewBox="0 0 24 24"
+                                        stroke="currentColor"
+                                    >
+                                        <path
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                            stroke-width="2"
+                                            d="M9 5l7 7-7 7"
+                                        />
+                                    </svg>
+                                </div>
+                            </a>
+
+                            <a
+                                href="/dashboard/profile"
+                                class="block bg-white border-2 border-gray-200 rounded-lg p-6 hover:border-blue-500 transition-colors"
+                            >
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <h3 class="text-lg font-semibold text-gray-900">
+                                            Profile & Badges
+                                        </h3>
+                                        <p class="text-gray-600 mt-1">
+                                            View badges and skills
+                                        </p>
+                                    </div>
+                                    <svg
+                                        class="w-6 h-6 text-gray-400"
+                                        fill="none"
+                                        viewBox="0 0 24 24"
+                                        stroke="currentColor"
+                                    >
+                                        <path
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                            stroke-width="2"
+                                            d="M9 5l7 7-7 7"
+                                        />
+                                    </svg>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                ) : null
+            }
+        </div>
+    </div>
+</AppLayout>

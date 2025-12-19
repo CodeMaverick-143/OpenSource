@@ -1,0 +1,40 @@
+---
+/**
+ * Public badge grid - displays full Badge objects with rarity styling.
+ * Used on /badges page which returns full Badge objects from the API.
+ */
+import type { Badge } from "../../lib/types";
+import BadgeCard from "./BadgeCard.astro";
+import Card from "../ui/Card.astro";
+
+interface Props {
+    badges: Badge[];
+}
+
+const { badges } = Astro.props;
+---
+
+{
+    badges.length === 0 ? (
+        <Card>
+            <div class="text-center py-12 text-gray-600">
+                <div class="text-6xl mb-4">🏆</div>
+                <h3 class="text-lg font-semibold text-gray-900 mb-2">
+                    No badges found
+                </h3>
+                <p>Try adjusting your filters to see more badges.</p>
+            </div>
+        </Card>
+    ) : (
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {badges.map((badge) => (
+                <BadgeCard
+                    badge={badge}
+                    earned={false}
+                    showCategory={true}
+                    size="md"
+                />
+            ))}
+        </div>
+    )
+}

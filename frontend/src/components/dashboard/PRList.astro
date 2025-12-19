@@ -1,0 +1,26 @@
+---
+import type { PRListResponse } from "../../lib/types";
+import PRCard from "./PRCard.astro";
+import EmptyState from "../ui/EmptyState.astro";
+
+interface Props {
+    response: PRListResponse;
+}
+
+const { response } = Astro.props;
+---
+
+{
+    response.items.length === 0 ? (
+        <EmptyState
+            title="No PRs found"
+            description="You haven't submitted any pull requests yet. Start contributing to see them here!"
+        />
+    ) : (
+        <div class="space-y-4">
+            {response.items.map((pr) => (
+                <PRCard pr={pr} />
+            ))}
+        </div>
+    )
+}

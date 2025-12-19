@@ -1,0 +1,27 @@
+---
+import type { PointsHistoryResponse } from "../../lib/types";
+import PointTransaction from "./PointTransaction.astro";
+import EmptyState from "../ui/EmptyState.astro";
+
+interface Props {
+    response: PointsHistoryResponse;
+}
+
+const { response } = Astro.props;
+---
+
+{
+    response.items.length === 0 ? (
+        <EmptyState
+            title="No points history"
+            description="Your point transactions will appear here once you start earning points from merged PRs."
+            icon="💰"
+        />
+    ) : (
+        <div class="space-y-3">
+            {response.items.map((transaction) => (
+                <PointTransaction transaction={transaction} />
+            ))}
+        </div>
+    )
+}

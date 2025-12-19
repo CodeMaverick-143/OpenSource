@@ -1,0 +1,72 @@
+---
+import AppLayout from "../../components/layout/AppLayout.astro";
+import { getBadges, getSkills, getContributionGraph } from "../../lib/api";
+import BadgeGrid from "../../components/dashboard/BadgeGrid.astro";
+import SkillTags from "../../components/dashboard/SkillTags.astro";
+import ContributionGraph from "../../components/dashboard/ContributionGraph.astro";
+import TimeRangeToggle from "../../components/islands/TimeRangeToggle";
+import ErrorMessage from "../../components/ui/ErrorMessage.astro";
+import type { TimeRange } from "../../lib/types";
+
+// Parse query parameters
+const url = new URL(Astro.request.url);
+const range = (url.searchParams.get("range") as TimeRange) || "30d";
+
+let badges = null;
+let skills = null;
+let graph = null;
+let error = null;
+
+try {
+    [badges, skills, graph] = await Promise.all([
+        getBadges(),
+        getSkills(),
+        getContributionGraph(range),
+    ]);
+} catch (e) {
+    error = e instanceof Error ? e.message : "Failed to load profile data";
+}
+---
+
+<AppLayout title="Profile & Badges - ContriVerse">
+    <div class="min-h-screen bg-gray-50">
+        <div class="container-dashboard py-8">
+            <div class="mb-6">
+                <h1 class="text-3xl font-bold text-gray-900">
+                    Profile & Achievements
+                </h1>
+                <p class="text-gray-600 mt-2">
+                    View your badges, skills, and contribution activity
+                </p>
+            </div>
+
+            {
+                error ? (
+                    <ErrorMessage
+                        title="Error Loading Profile"
+                        description={error}
+                    />
+                ) : (
+                    <div class="space-y-8">
+                        {/* Contribution Graph */}
+                        {graph && (
+                            <div>
+                                <TimeRangeToggle
+                                    client:load
+                                    initialRange={range}
+                                />
+                                <ContributionGraph graph={graph} />
+                            </div>
+                        )}
+
+                        {/* Skills */}
+                        {skills && <SkillTags skills={skills} />}
+
+                        {/* Badges */}
+                        {badges && <BadgeGrid badges={badges} />}
+                    </div>
+                )
+            }
+        </div>
+    </div>
+</AppLayout>

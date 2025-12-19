@@ -1,0 +1,127 @@
+---
+/**
+ * Badge card component with rarity-based styling.
+ * Displays badge with icon, name, description, and rarity glow effect.
+ */
+import type { Badge } from "../../lib/types";
+import {
+    getBadgeRarityStyles,
+    formatBadgeRarity,
+    getBadgeCategoryIcon,
+} from "../../lib/badgeUtils";
+
+interface Props {
+    badge: Badge;
+    earned?: boolean;
+    showCategory?: boolean;
+    size?: "sm" | "md" | "lg";
+}
+
+const {
+    badge,
+    earned = false,
+    showCategory = false,
+    size = "md",
+} = Astro.props;
+
+const styles = getBadgeRarityStyles(badge.rarity);
+const categoryIcon = getBadgeCategoryIcon(badge.category);
+
+// Size variants
+const sizeClasses = {
+    sm: "p-3",
+    md: "p-4",
+    lg: "p-6",
+};
+
+const iconSizes = {
+    sm: "text-2xl",
+    md: "text-4xl",
+    lg: "text-5xl",
+};
+
+const titleSizes = {
+    sm: "text-sm",
+    md: "text-base",
+    lg: "text-lg",
+};
+---
+
+<div
+    class={`
+        relative rounded-lg border-2 transition-all duration-300
+        ${styles.border} ${styles.bg} ${sizeClasses[size]}
+        ${earned ? styles.glow : "opacity-60 grayscale"}
+        hover:scale-105 hover:${styles.glow}
+    `}
+>
+    <!-- Rarity indicator -->
+    <div class="absolute top-2 right-2">
+        <span
+            class={`
+                px-2 py-0.5 text-xs font-semibold rounded-full
+                ${styles.text} ${styles.bg} border ${styles.border}
+            `}
+        >
+            {formatBadgeRarity(badge.rarity)}
+        </span>
+    </div>
+
+    <!-- Badge content -->
+    <div class="flex flex-col items-center text-center space-y-2">
+        <!-- Icon -->
+        <div class={`${iconSizes[size]} ${styles.icon}`}>
+            {
+                badge.iconUrl ? (
+                    <img
+                        src={badge.iconUrl}
+                        alt={badge.name}
+                        class="w-full h-full object-contain"
+                    />
+                ) : (
+                    <span>{categoryIcon}</span>
+                )
+            }
+        </div>
+
+        <!-- Name -->
+        <h3 class={`font-bold ${styles.text} ${titleSizes[size]}`}>
+            {badge.name}
+        </h3>
+
+        <!-- Description -->
+        <p class={`text-xs ${styles.text} opacity-80 line-clamp-2`}>
+            {badge.description}
+        </p>
+
+        <!-- Category (optional) -->
+        {
+            showCategory && (
+                <div class="flex items-center gap-1 text-xs opacity-70">
+                    <span>{categoryIcon}</span>
+                    <span class={styles.text}>{badge.category}</span>
+                </div>
+            )
+        }
+
+        <!-- Earned indicator -->
+        {
+            earned && (
+                <div class="flex items-center gap-1 text-xs font-semibold text-green-600">
+                    <svg
+                        class="w-4 h-4"
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                    >
+                        <path
+                            fill-rule="evenodd"
+                            d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                            clip-rule="evenodd"
+                        />
+                    </svg>
+                    <span>Earned</span>
+                </div>
+            )
+        }
+    </div>
+</div>

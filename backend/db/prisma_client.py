@@ -2,8 +2,7 @@
 Prisma client singleton for database access.
 """
 
-from contextlib import asynccontextmanager
-from typing import AsyncGenerator, Optional
+from typing import Optional
 
 import structlog
 
@@ -77,8 +76,7 @@ async def disconnect_prisma() -> None:
     logger.info("prisma_client_disconnected")
 
 
-@asynccontextmanager
-async def get_db() -> AsyncGenerator[Prisma, None]:
+async def get_db() -> Prisma:
     """
     Dependency to get Prisma client for FastAPI routes.
 
@@ -88,15 +86,10 @@ async def get_db() -> AsyncGenerator[Prisma, None]:
             users = await db.user.find_many()
             return users
 
-    Yields:
+    Returns:
         Prisma client
     """
-    client = get_prisma_client()
-    try:
-        yield client
-    except Exception as e:
-        logger.error("database_operation_error", error=str(e))
-        raise
+    return get_prisma_client()
 
 
 async def health_check() -> bool:

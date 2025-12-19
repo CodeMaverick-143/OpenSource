@@ -1,0 +1,47 @@
+---
+import AppLayout from "../components/layout/AppLayout.astro";
+import Hero from "../components/landing/Hero.astro";
+import ProblemSolution from "../components/landing/ProblemSolution.astro";
+import HowItWorks from "../components/landing/HowItWorks.astro";
+import TrustSignals from "../components/landing/TrustSignals.astro";
+import ContributorMaintainer from "../components/landing/ContributorMaintainer.astro";
+import DemoPreview from "../components/landing/DemoPreview.astro";
+---
+
+<AppLayout title="ContriVerse | Merit-Based Open Source Tracking">
+	<main class="overflow-x-hidden">
+		<Hero />
+		<ProblemSolution />
+		<HowItWorks />
+		<TrustSignals />
+		<ContributorMaintainer />
+		<DemoPreview />
+
+		<!-- Final CTA -->
+		<section
+			class="py-24 bg-[var(--color-bg-surface)] text-center border-t border-[var(--color-border)]"
+		>
+			<div class="container-dashboard">
+				<h2
+					class="text-4xl font-bold mb-6 text-[var(--color-text-main)]"
+				>
+					Ready to prove your skills?
+				</h2>
+				<p
+					class="text-[var(--color-text-muted)] mb-10 max-w-xl mx-auto"
+				>
+					Join the community of developers building verified
+					reputation through open source.
+				</p>
+				<div class="flex justify-center gap-6">
+					<a href="/dashboard" class="btn-primary text-lg px-8 py-3">
+						Start Contributing
+					</a>
+					<a href="/projects" class="btn-secondary text-lg px-8 py-3">
+						View Open Projects
+					</a>
+				</div>
+			</div>
+		</section>
+	</main>
+</AppLayout>
