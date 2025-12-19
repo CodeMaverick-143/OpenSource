@@ -2,121 +2,132 @@
 
 ---
 
-<section class="py-24 bg-[var(--color-bg-surface)]">
+<section
+    class="py-24 bg-[var(--color-bg-surface)] border-y border-[var(--color-border)]"
+>
     <div class="container-dashboard">
         <div
-            class="grid grid-cols-1 md:grid-cols-2 gap-12 lg:gap-24 items-center"
+            class="grid grid-cols-1 md:grid-cols-2 gap-16 lg:gap-24 items-start"
         >
             <!-- The Problem -->
-            <div>
+            <div class="pt-8">
                 <h2
-                    class="text-3xl font-bold mb-6 text-[var(--color-text-main)]"
+                    class="text-3xl font-bold mb-8 text-[var(--color-text-main)] leading-tight"
                 >
-                    The Problem with <br />
+                    The problem with <br />
                     <span class="text-[var(--color-text-dim)]"
-                        >GitHub Profiles</span
+                        >traditional profiles.</span
                     >
                 </h2>
-                <div class="space-y-6">
-                    <div class="border-l-2 border-[var(--color-border)] pl-6">
+                <div class="space-y-10">
+                    <div class="pl-6 border-l border-[var(--color-border)]">
                         <h3
-                            class="text-xl font-semibold mb-2 text-[var(--color-text-muted)]"
+                            class="text-lg font-semibold mb-2 text-[var(--color-text-muted)]"
                         >
                             Green Squares Lie
                         </h3>
-                        <p class="text-[var(--color-text-dim)]">
-                            Commit streaks don't measure code quality,
-                            difficulty, or impact. A typo fix looks same as a
-                            core feature.
+                        <p
+                            class="text-[var(--color-text-dim)] text-base max-w-prose"
+                        >
+                            Commit streaks measure persistence, not impact. A
+                            typo fix looks identical to a core architecture
+                            change.
                         </p>
                     </div>
-                    <div class="border-l-2 border-[var(--color-border)] pl-6">
+                    <div class="pl-6 border-l border-[var(--color-border)]">
                         <h3
-                            class="text-xl font-semibold mb-2 text-[var(--color-text-muted)]"
+                            class="text-lg font-semibold mb-2 text-[var(--color-text-muted)]"
                         >
-                            Invisible Impact
+                            Invisible Work
                         </h3>
-                        <p class="text-[var(--color-text-dim)]">
-                            Code reviews, mentorship, and issue triage are
-                            largely invisible on traditional profiles.
+                        <p
+                            class="text-[var(--color-text-dim)] text-base max-w-prose"
+                        >
+                            Code reviews, issue triage, and mentorship logic are
+                            completely missed by commit-based metrics.
                         </p>
                     </div>
-                    <div class="border-l-2 border-[var(--color-border)] pl-6">
+                    <div class="pl-6 border-l border-[var(--color-border)]">
                         <h3
-                            class="text-xl font-semibold mb-2 text-[var(--color-text-muted)]"
+                            class="text-lg font-semibold mb-2 text-[var(--color-text-muted)]"
                         >
-                            No Context
+                            Context Free
                         </h3>
-                        <p class="text-[var(--color-text-dim)]">
-                            Recruiters and maintainers can't easily see if
-                            you're a beginner or a specialist.
+                        <p
+                            class="text-[var(--color-text-dim)] text-base max-w-prose"
+                        >
+                            Recruiters can't tell the difference between a
+                            "Hello World" repo and a production-grade library.
                         </p>
                     </div>
                 </div>
             </div>
 
             <!-- The Solution -->
-            <div
-                class="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-card)] p-8 md:p-12"
-            >
-                <h2 class="text-3xl font-bold mb-8 flex items-center gap-3">
-                    <span class="text-[var(--color-accent-primary)]"
+            <div class="card-premium relative overflow-hidden">
+                <!-- Subtle accent blob -->
+                <!-- No gradient accents -->
+
+                <h2
+                    class="text-2xl font-bold mb-8 flex items-center gap-3 relative z-10"
+                >
+                    <span class="text-[var(--color-text-main)]"
                         >The Solution</span
                     >
                 </h2>
 
-                <ul class="space-y-6">
-                    <li class="flex gap-4">
+                <ul class="space-y-8 relative z-10">
+                    <li class="flex gap-4 items-start">
                         <div
-                            class="mt-1 h-6 w-6 rounded-full bg-[var(--color-accent-primary)]/10 flex items-center justify-center text-[var(--color-accent-primary)] text-sm"
+                            class="mt-1 h-5 w-5 rounded-sm bg-[var(--color-accent-primary)]/10 flex items-center justify-center text-[var(--color-accent-primary)] text-xs font-bold border border-[var(--color-accent-primary)]/20"
                         >
                             ✓
                         </div>
                         <div>
-                            <h3 class="font-semibold text-white">
+                            <h3 class="font-medium text-white text-lg">
                                 Quality-Adjusted Scoring
                             </h3>
                             <p
-                                class="text-sm text-[var(--color-text-muted)] mt-1"
+                                class="text-sm text-[var(--color-text-muted)] mt-1 leading-relaxed"
                             >
-                                Points based on diff size, complexity, and
-                                maintainer ratings.
+                                Points are weighted by diff complexity, file
+                                impact, and peer ratings.
                             </p>
                         </div>
                     </li>
-                    <li class="flex gap-4">
+                    <li class="flex gap-4 items-start">
                         <div
-                            class="mt-1 h-6 w-6 rounded-full bg-[var(--color-accent-primary)]/10 flex items-center justify-center text-[var(--color-accent-primary)] text-sm"
+                            class="mt-1 h-5 w-5 rounded-sm bg-[var(--color-accent-primary)]/10 flex items-center justify-center text-[var(--color-accent-primary)] text-xs font-bold border border-[var(--color-accent-primary)]/20"
                         >
                             ✓
                         </div>
                         <div>
-                            <h3 class="font-semibold text-white">
+                            <h3 class="font-medium text-white text-lg">
                                 Verified Peer Reviews
                             </h3>
                             <p
-                                class="text-sm text-[var(--color-text-muted)] mt-1"
+                                class="text-sm text-[var(--color-text-muted)] mt-1 leading-relaxed"
                             >
-                                Get rated by project maintainers for code
-                                quality and communication.
+                                Soft skills are tracked via maintainer feedback
+                                on communication and helpfulness.
                             </p>
                         </div>
                     </li>
-                    <li class="flex gap-4">
+                    <li class="flex gap-4 items-start">
                         <div
-                            class="mt-1 h-6 w-6 rounded-full bg-[var(--color-accent-primary)]/10 flex items-center justify-center text-[var(--color-accent-primary)] text-sm"
+                            class="mt-1 h-5 w-5 rounded-sm bg-[var(--color-accent-primary)]/10 flex items-center justify-center text-[var(--color-accent-primary)] text-xs font-bold border border-[var(--color-accent-primary)]/20"
                         >
                             ✓
                         </div>
                         <div>
-                            <h3 class="font-semibold text-white">
-                                Specific Skill Badges
+                            <h3 class="font-medium text-white text-lg">
+                                Proof, Not Just Claims
                             </h3>
                             <p
-                                class="text-sm text-[var(--color-text-muted)] mt-1"
+                                class="text-sm text-[var(--color-text-muted)] mt-1 leading-relaxed"
                             >
-                                Earn badges for "Documentation", "Bug Hunting",
-                                or "System Architecture".
+                                Every point on your profile links back to the
+                                specific GitHub event that earned it.
                             </p>
                         </div>
                     </li>

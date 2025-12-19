@@ -2,19 +2,21 @@
 
 ---
 
-<section class="relative overflow-hidden py-24 sm:py-32">
+<section class="relative overflow-hidden py-16 sm:py-24">
     <div class="container-dashboard relative z-10 text-center">
+        <!-- Tagline Pill -->
         <div class="mb-8 flex justify-center">
             <div
-                class="rounded-full border border-gray-800 bg-[#222] px-3 py-1 text-sm text-[var(--color-text-muted)] animate-fade-in-up"
+                class="rounded-full border border-[var(--color-border)] bg-[var(--color-bg-surface)] px-4 py-1.5 text-xs font-medium text-[var(--color-text-muted)] tracking-wide uppercase"
             >
-                <span class="mr-2 text-[var(--color-accent-primary)]">●</span>
-                Open Source Contribution Platform
+                <span class="mr-2 text-[var(--color-accent-primary)]">⦿</span>
+                Merit-Based Contribution Tracking
             </div>
         </div>
 
+        <!-- Headline -->
         <h1
-            class="mx-auto max-w-4xl text-5xl font-bold tracking-tight text-[var(--color-text-main)] sm:text-7xl mb-8"
+            class="mx-auto max-w-4xl text-5xl font-bold tracking-tight text-white sm:text-7xl mb-6"
         >
             Build a verified <br />
             <span class="text-[var(--color-text-muted)]"
@@ -22,68 +24,38 @@
             >
         </h1>
 
-        <p
-            class="mx-auto mt-6 max-w-2xl text-lg leading-8 text-[var(--color-text-muted)]"
+        <!-- Subtext -->
+        <h2
+            class="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-[var(--color-text-dim)]"
         >
-            ContriVerse tracks your real impact, not just commit counts. Earn
-            badges, climb merit-based leaderboards, and prove your open source
-            expertise.
-        </p>
+            ContriVerse tracks real impact, not just commit counts. Earn badges,
+            climb merit-based leaderboards, and <strong
+                class="text-[var(--color-text-muted)] font-medium"
+                >prove your expertise</strong
+            >.
+        </h2>
 
+        <!-- CTAs -->
         <div class="mt-10 flex items-center justify-center gap-x-6">
             <a href="/dashboard" class="btn-primary"> Explore Projects </a>
             <a href="#how-it-works" class="btn-secondary"> How It Works </a>
         </div>
 
+        <!-- Trust Identifiers (Simplified) -->
         <div
-            class="mt-16 flex justify-center gap-8 text-[var(--color-text-dim)] text-sm"
+            class="mt-20 flex justify-center items-center gap-8 md:gap-16 text-[var(--color-text-dim)] text-sm font-medium border-t border-[var(--color-border)] pt-8 max-w-3xl mx-auto"
         >
-            <div class="flex items-center gap-2">
-                <svg
-                    class="h-5 w-5"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                >
-                    <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                    ></path>
-                </svg>
+            <div class="flex items-center gap-3">
+                <span class="text-[var(--color-accent-primary)]">•</span>
                 <span>Verified Contributions</span>
             </div>
-            <div class="flex items-center gap-2">
-                <svg
-                    class="h-5 w-5"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                >
-                    <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-                    ></path>
-                </svg>
+            <div class="flex items-center gap-3">
+                <span class="text-[var(--color-accent-primary)]">•</span>
                 <span>GitHub Integrated</span>
             </div>
-            <div class="flex items-center gap-2">
-                <svg
-                    class="h-5 w-5"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                >
-                    <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M13 10V3L4 14h7v7l9-11h-7z"></path>
-                </svg>
-                <span>Merit Based</span>
+            <div class="flex items-center gap-3">
+                <span class="text-[var(--color-accent-primary)]">•</span>
+                <span>No Fluff Metrics</span>
             </div>
         </div>
     </div>

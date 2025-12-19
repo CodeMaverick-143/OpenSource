@@ -12,42 +12,136 @@
         </div>
 
         <div
-            class="relative mx-auto max-w-5xl rounded-xl bg-[var(--color-bg-card)] border border-[var(--color-border)] p-2 shadow-2xl"
+            class="relative mx-auto max-w-5xl rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-card)] p-1 shadow-2xl"
         >
+            <!-- Mock Window Controls -->
             <div
-                class="absolute inset-0 bg-gradient-to-b from-[var(--color-accent-primary)]/5 to-transparent rounded-xl pointer-events-none"
+                class="h-8 bg-[var(--color-bg-surface)] border-b border-[var(--color-border)] rounded-t-lg flex items-center px-4 gap-2"
             >
+                <div class="w-3 h-3 rounded-full bg-[#FF5F56]"></div>
+                <div class="w-3 h-3 rounded-full bg-[#FFBD2E]"></div>
+                <div class="w-3 h-3 rounded-full bg-[#27C93F]"></div>
             </div>
 
-            <!-- Mock UI Container -->
+            <!-- Mock Dashboard Content -->
             <div
-                class="rounded-lg bg-[var(--color-bg-main)] aspect-[16/9] flex items-center justify-center border border-[var(--color-border)] overflow-hidden relative"
+                class="grid grid-cols-[200px_1fr] h-[400px] bg-[var(--color-bg-main)] overflow-hidden rounded-b-lg text-left"
             >
-                <!-- Placeholder for actual dashboard screenshot -->
+                <!-- Sidebar -->
                 <div
-                    class="text-[var(--color-text-dim)] flex flex-col items-center"
+                    class="border-r border-[var(--color-border)] bg-[var(--color-bg-surface)] p-4 flex flex-col gap-4"
                 >
-                    <!-- Mock Badge Grid logic representation -->
-                    <div class="grid grid-cols-4 gap-4 p-8 opacity-50">
+                    <div
+                        class="h-6 w-24 bg-[var(--color-border)]/50 rounded animate-pulse"
+                    >
+                    </div>
+                    <div class="h-px bg-[var(--color-border)] my-2"></div>
+                    <div class="h-4 w-32 bg-[var(--color-border)]/30 rounded">
+                    </div>
+                    <div class="h-4 w-28 bg-[var(--color-border)]/30 rounded">
+                    </div>
+                    <div class="h-4 w-32 bg-[var(--color-border)]/30 rounded">
+                    </div>
+                </div>
+
+                <!-- Main Content -->
+                <div class="p-6 flex flex-col gap-6">
+                    <!-- Header -->
+                    <div class="flex justify-between items-center">
                         <div
-                            class="w-16 h-16 rounded border border-[var(--color-border)] bg-[var(--color-bg-surface)]"
+                            class="h-8 w-48 bg-[var(--color-border)]/50 rounded"
                         >
                         </div>
                         <div
-                            class="w-16 h-16 rounded border border-[var(--color-border)] bg-[var(--color-bg-surface)]"
-                        >
-                        </div>
-                        <div
-                            class="w-16 h-16 rounded border border-[var(--color-border)] bg-[var(--color-bg-surface)]"
-                        >
-                        </div>
-                        <div
-                            class="w-16 h-16 rounded border border-[var(--color-border)] bg-[var(--color-bg-surface)]"
+                            class="h-8 w-8 rounded-full bg-[var(--color-accent-primary)]/20"
                         >
                         </div>
                     </div>
-                    <p class="mt-4 font-mono text-sm">Dashboard Preview</p>
+
+                    <!-- Stats Grid -->
+                    <div class="grid grid-cols-3 gap-4">
+                        <div
+                            class="h-24 rounded border border-[var(--color-border)] bg-[var(--color-bg-surface)] p-4"
+                        >
+                            <div
+                                class="h-4 w-12 bg-[var(--color-border)]/30 rounded mb-2"
+                            >
+                            </div>
+                            <div
+                                class="h-8 w-16 bg-[var(--color-border)]/50 rounded"
+                            >
+                            </div>
+                        </div>
+                        <div
+                            class="h-24 rounded border border-[var(--color-border)] bg-[var(--color-bg-surface)] p-4"
+                        >
+                            <div
+                                class="h-4 w-12 bg-[var(--color-border)]/30 rounded mb-2"
+                            >
+                            </div>
+                            <div
+                                class="h-8 w-16 bg-[var(--color-border)]/50 rounded"
+                            >
+                            </div>
+                        </div>
+                        <div
+                            class="h-24 rounded border border-[var(--color-border)] bg-[var(--color-bg-surface)] p-4"
+                        >
+                            <div
+                                class="h-4 w-12 bg-[var(--color-border)]/30 rounded mb-2"
+                            >
+                            </div>
+                            <div
+                                class="h-8 w-16 bg-[var(--color-border)]/50 rounded"
+                            >
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Activity Graph Mockup -->
+                    <div
+                        class="flex-1 rounded border border-[var(--color-border)] bg-[var(--color-bg-surface)] p-4 flex items-end justify-between gap-2 overflow-hidden"
+                    >
+                        <div
+                            class="w-full bg-[var(--color-accent-primary)]/20 rounded-t-sm h-[30%]"
+                        >
+                        </div>
+                        <div
+                            class="w-full bg-[var(--color-accent-primary)]/40 rounded-t-sm h-[50%]"
+                        >
+                        </div>
+                        <div
+                            class="w-full bg-[var(--color-accent-primary)]/30 rounded-t-sm h-[40%]"
+                        >
+                        </div>
+                        <div
+                            class="w-full bg-[var(--color-accent-primary)]/60 rounded-t-sm h-[70%]"
+                        >
+                        </div>
+                        <div
+                            class="w-full bg-[var(--color-accent-primary)]/80 rounded-t-sm h-[85%]"
+                        >
+                        </div>
+                        <div
+                            class="w-full bg-[var(--color-accent-primary)]/50 rounded-t-sm h-[45%]"
+                        >
+                        </div>
+                        <div
+                            class="w-full bg-[var(--color-accent-primary)]/30 rounded-t-sm h-[35%]"
+                        >
+                        </div>
+                        <div
+                            class="w-full bg-[var(--color-accent-primary)]/90 rounded-t-sm h-[95%]"
+                        >
+                        </div>
+                    </div>
                 </div>
+            </div>
+
+            <!-- Subtle gloss reflection (opacity based) -->
+            <div
+                class="absolute inset-0 bg-white/[0.02] pointer-events-none rounded-xl"
+            >
             </div>
         </div>
     </div>

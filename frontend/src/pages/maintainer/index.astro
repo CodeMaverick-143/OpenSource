@@ -15,89 +15,128 @@ try {
 } catch (e) {
     error = e instanceof Error ? e.message : 'Failed to load projects';
 }
+
+const ICONS = {
+    REPO: `<svg class="w-4 h-4 mr-1.5 opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>`,
+    TAG: `<svg class="w-3 h-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path></svg>`,
+    LEVEL: `<svg class="w-3 h-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>`,
+    EMPTY: `<svg class="w-16 h-16 text-[var(--color-text-dim)] mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>`
+};
 ---
 
 <AppLayout title="Maintainer Dashboard">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        
         <!-- Header -->
-        <div class="mb-8">
-            <h1 class="text-3xl font-bold text-gray-900 mb-2">
-                Maintainer Dashboard
-            </h1>
-            <p class="text-gray-600">
-                Manage your projects and review contributions
-            </p>
+        <div class="mb-12 flex flex-col md:flex-row md:items-end justify-between gap-6 animate-fade-in-up">
+            <div>
+                <span class="inline-block py-1 px-3 rounded text-xs font-bold tracking-wider uppercase border border-[var(--color-accent-secondary)]/30 text-[var(--color-accent-secondary)] bg-[var(--color-accent-secondary)]/10 mb-4">
+                    Maintainer Console
+                </span>
+                <h1 class="text-4xl font-bold text-[var(--color-text-main)] mb-3 tracking-tight">
+                    Your Projects
+                </h1>
+                <p class="text-[var(--color-text-muted)] text-lg max-w-2xl">
+                    Manage PRs, review submissions, and track community impact.
+                </p>
+            </div>
+            
+            <a href="/projects/new" class="btn-primary flex items-center gap-2 shadow-lg shadow-orange-900/20">
+                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                </svg>
+                <span>New Project</span>
+            </a>
         </div>
 
         <!-- Error state -->
         {error && (
-            <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
-                <p class="text-red-700">{error}</p>
+            <div class="bg-red-900/10 border border-red-900/30 rounded-xl p-6 mb-8 animate-fade-in-up">
+                <div class="flex items-center gap-3 text-red-400">
+                    <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <p class="font-medium">{error}</p>
+                </div>
             </div>
         )}
 
         <!-- Projects list -->
         {!error && projects.length === 0 ? (
-            <div class="text-center py-12 bg-white rounded-lg border border-gray-200">
-                <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-                <h3 class="mt-2 text-sm font-medium text-gray-900">No projects</h3>
-                <p class="mt-1 text-sm text-gray-500">
-                    You are not a maintainer of any projects yet.
+            <div class="text-center py-24 bg-[var(--color-bg-card)] rounded-2xl border border-[var(--color-border)] border-dashed animate-fade-in-up delay-100">
+                <div class="inline-flex items-center justify-center p-6 bg-[var(--color-bg-surface)] rounded-full mb-6">
+                    <Fragment set:html={ICONS.EMPTY} />
+                </div>
+                <h3 class="text-xl font-bold text-[var(--color-text-main)] mb-2">No projects yet</h3>
+                <p class="text-[var(--color-text-muted)] max-w-md mx-auto mb-8">
+                    Start by importing a repository from GitHub to begin tracking contributions.
                 </p>
+                <a href="/projects/import" class="btn-primary">
+                    Import Repository
+                </a>
             </div>
         ) : (
-            <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                {projects.map(project => (
-                    <div class="bg-white border border-gray-200 rounded-lg p-6 hover:shadow-lg transition-shadow">
+            <div class="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+                {projects.map((project, index) => (
+                    <div 
+                        class="card-premium flex flex-col h-full group animate-fade-in-up" 
+                        style={`animation-delay: ${index * 100}ms`}
+                    >
                         <!-- Project header -->
-                        <div class="mb-4">
-                            <h3 class="text-xl font-bold text-gray-900 mb-2">
-                                {project.name}
-                            </h3>
+                        <div class="mb-6">
+                            <div class="flex justify-between items-start mb-4">
+                                <h3 class="text-xl font-bold text-[var(--color-text-main)] group-hover:text-[var(--color-accent-primary)] transition-colors">
+                                    {project.name}
+                                </h3>
+                                <div class="bg-[var(--color-bg-surface)] p-2 rounded-lg border border-[var(--color-border)]">
+                                    <Fragment set:html={ICONS.REPO} />
+                                </div>
+                            </div>
+                            
                             {project.description && (
-                                <p class="text-sm text-gray-600 line-clamp-2">
+                                <p class="text-sm text-[var(--color-text-muted)] line-clamp-2 leading-relaxed h-10">
                                     {project.description}
                                 </p>
                             )}
                         </div>
 
-                        <!-- Project stats -->
-                        <div class="mb-4 flex flex-wrap gap-2">
-                            {project.tags.map(tag => (
-                                <span class="px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded">
+                        <!-- Pill Grid -->
+                        <div class="mb-8 flex flex-wrap gap-2">
+                             <span class={`inline-flex items-center px-2.5 py-1 text-xs font-semibold rounded-md border ${
+                                project.difficulty === 'beginner' ? 'border-emerald-500/20 text-emerald-400 bg-emerald-500/5' :
+                                project.difficulty === 'intermediate' ? 'border-amber-500/20 text-amber-400 bg-amber-500/5' :
+                                'border-rose-500/20 text-rose-400 bg-rose-500/5'
+                            }`}>
+                                <Fragment set:html={ICONS.LEVEL} />
+                                {project.difficulty}
+                            </span>
+                            
+                            {project.tags.slice(0, 3).map(tag => (
+                                <span class="inline-flex items-center px-2.5 py-1 text-xs font-medium border border-[var(--color-border)] text-[var(--color-text-dim)] rounded-md bg-[var(--color-bg-surface)]">
+                                    <Fragment set:html={ICONS.TAG} />
                                     {tag}
                                 </span>
                             ))}
-                            <span class={`px-2 py-1 text-xs font-medium rounded ${
-                                project.difficulty === 'beginner' ? 'bg-green-100 text-green-800' :
-                                project.difficulty === 'intermediate' ? 'bg-yellow-100 text-yellow-800' :
-                                'bg-red-100 text-red-800'
-                            }`}>
-                                {project.difficulty}
+                        </div>
+
+                        <!-- Repo Count Footer -->
+                        <div class="mt-auto pt-6 border-t border-[var(--color-border)] flex items-center justify-between text-sm">
+                            <span class="text-[var(--color-text-dim)] flex items-center">
+                                {project.repositories.length} {project.repositories.length === 1 ? 'Repository' : 'Repositories'}
                             </span>
                         </div>
 
-                        <!-- Repository count -->
-                        <div class="mb-4 text-sm text-gray-600">
-                            <svg class="inline w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 0h8v12H6V4z" clip-rule="evenodd" />
-                            </svg>
-                            {project.repositories.length} {project.repositories.length === 1 ? 'repository' : 'repositories'}
-                        </div>
-
-                        <!-- Actions -->
-                        <div class="flex gap-2">
+                        <!-- Actions Hover Reveal -->
+                        <div class="grid grid-cols-2 gap-3 mt-4">
                             <a
                                 href={`/maintainer/${project.id}/prs`}
-                                class="flex-1 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 text-center"
+                                class="btn-primary text-center text-sm py-2"
                             >
-                                View PRs
+                                Review PRs
                             </a>
                             <a
                                 href={`/maintainer/${project.id}/analytics`}
-                                class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+                                class="btn-secondary text-center text-sm py-2"
                             >
                                 Analytics
                             </a>
